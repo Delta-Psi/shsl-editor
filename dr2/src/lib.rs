@@ -1,3 +1,4 @@
-pub fn test_print(text: &str) {
-    println!("this is a test: {}", text);
-}
+pub mod formats;
+
+#[cfg(test)]
+mod tests;
