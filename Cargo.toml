@@ -1,0 +1,3 @@
+[workspace]
+
+members = ["dr2", "gui"]
