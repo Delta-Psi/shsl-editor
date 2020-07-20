@@ -2,3 +2,4 @@
 
 pub mod wad;
 pub mod pak;
+pub mod gmo;
