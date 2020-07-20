@@ -3,9 +3,18 @@ use std::fs::File;
 use std::path::{Path, PathBuf};
 use std::collections::HashMap;
 
+use error_chain::{error_chain, bail};
+error_chain! {
+    foreign_links {
+        Io(::std::io::Error);
+        InvalidString(std::string::FromUtf8Error);
+    }
+}
+
 pub mod header {
     use std::io::{prelude::*, SeekFrom, BufReader};
     use byteorder::{ByteOrder, ReadBytesExt, LittleEndian as LE};
+    use super::*;
 
     #[derive(Debug)]
     pub struct Header {
@@ -38,36 +47,36 @@ pub mod header {
     }
 
     impl Header {
-        pub fn read_from<R: Read + Seek>(reader: R) -> Option<Self> {
+        pub fn read_from<R: Read + Seek>(reader: R) -> Result<Self> {
             // buffer i/o calls
             let mut reader = BufReader::new(reader);
 
             // store the offset at which the header begins (usually 0)
-            let begin = reader.seek(SeekFrom::Current(0)).ok()?;
+            let begin = reader.seek(SeekFrom::Current(0))?;
 
             // read the first 16 bytes
             let mut buf = vec![0; 16];
-            reader.read_exact(&mut buf).ok()?;
+            reader.read_exact(&mut buf)?;
 
             // check if the magic bytes are present
             if &buf[0..4] != b"AGAR" {
-                return None;
+                bail!("invalid magic bytes");
             }
             let version = [LE::read_u32(&buf[4..8]), LE::read_u32(&buf[8..12])];
 
             // now, read file metadata
-            let file_count = reader.read_u32::<LE>().ok()?;
+            let file_count = reader.read_u32::<LE>()?;
             let mut files = Vec::with_capacity(file_count as usize);
             for _ in 0..file_count {
-                let entry_offset = reader.seek(SeekFrom::Current(0)).ok()?;
+                let entry_offset = reader.seek(SeekFrom::Current(0))?;
 
-                let path_length = reader.read_u32::<LE>().ok()?;
+                let path_length = reader.read_u32::<LE>()?;
                 let mut buf = vec![0; path_length as usize];
-                reader.read_exact(&mut buf).ok()?;
-                let path = String::from_utf8(buf).ok()?;
+                reader.read_exact(&mut buf)?;
+                let path = String::from_utf8(buf)?;
 
-                let size = reader.read_u64::<LE>().ok()?;
-                let offset = reader.read_u64::<LE>().ok()?;
+                let size = reader.read_u64::<LE>()?;
+                let offset = reader.read_u64::<LE>()?;
 
                 files.push(FileEntry {
                     entry_offset,
@@ -78,28 +87,28 @@ pub mod header {
             }
 
             // finally read directory metadata
-            let dir_count = reader.read_u32::<LE>().ok()?;
+            let dir_count = reader.read_u32::<LE>()?;
             let mut dirs = Vec::with_capacity(dir_count as usize);
             for _ in 0..dir_count {
-                let entry_offset = reader.seek(SeekFrom::Current(0)).ok()?;
+                let entry_offset = reader.seek(SeekFrom::Current(0))?;
 
-                let path_length = reader.read_u32::<LE>().ok()?;
+                let path_length = reader.read_u32::<LE>()?;
                 let mut buf = vec![0; path_length as usize];
-                reader.read_exact(&mut buf).ok()?;
-                let path = String::from_utf8(buf).ok()?;
+                reader.read_exact(&mut buf)?;
+                let path = String::from_utf8(buf)?;
 
-                let subfile_count = reader.read_u32::<LE>().ok()?;
+                let subfile_count = reader.read_u32::<LE>()?;
                 let mut subfiles = Vec::with_capacity(subfile_count as usize);
 
                 for _ in 0..subfile_count {
-                    let entry_offset = reader.seek(SeekFrom::Current(0)).ok()?;
+                    let entry_offset = reader.seek(SeekFrom::Current(0))?;
 
-                    let name_length = reader.read_u32::<LE>().ok()?;
+                    let name_length = reader.read_u32::<LE>()?;
                     let mut buf = vec![0; name_length as usize];
-                    reader.read_exact(&mut buf).ok()?;
-                    let name = String::from_utf8(buf).ok()?;
+                    reader.read_exact(&mut buf)?;
+                    let name = String::from_utf8(buf)?;
                     
-                    let is_directory = reader.read_u8().ok()? != 0;
+                    let is_directory = reader.read_u8()? != 0;
 
                     subfiles.push(SubfileEntry {
                         entry_offset,
@@ -116,10 +125,10 @@ pub mod header {
             }
 
             // check the total header size
-            let end = reader.seek(SeekFrom::Current(0)).ok()?;
+            let end = reader.seek(SeekFrom::Current(0))?;
             let size = end - begin;
 
-            Some(Header {
+            Ok(Header {
                 version,
                 files,
                 dirs,
@@ -141,10 +150,10 @@ pub struct Wad {
 }
 
 impl Wad {
-    pub fn open<P: AsRef<Path>>(wad_path: P) -> Option<Self> {
+    pub fn open<P: AsRef<Path>>(wad_path: P) -> Result<Self> {
         let wad_path = wad_path.as_ref();
 
-        let mut file = File::open(wad_path).ok()?;
+        let mut file = File::open(wad_path)?;
         let header = Header::read_from(&mut file)?;
 
         // construct the path-to-entry-index hashmaps
@@ -155,7 +164,7 @@ impl Wad {
             .map(|(i, entry)| (entry.path.clone(), i))
             .collect();
 
-        Some(Wad {
+        Ok(Wad {
             header,
             _wad_path: wad_path.to_path_buf(),
             file,
