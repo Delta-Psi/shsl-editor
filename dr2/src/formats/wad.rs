@@ -1,3 +1,5 @@
+//! WAD files are the highest level container for game data.
+
 use std::io::{prelude::*, SeekFrom};
 use std::fs::File;
 use std::path::{Path, PathBuf};
