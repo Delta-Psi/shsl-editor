@@ -1,3 +1,7 @@
+use std::fs::File;
+use std::path::{Path, PathBuf};
+use std::collections::HashMap;
+
 pub mod header {
     use std::io::{prelude::*, SeekFrom, BufReader};
     use byteorder::{ByteOrder, ReadBytesExt, LittleEndian as LE};
@@ -12,6 +16,7 @@ pub mod header {
 
     #[derive(Debug)]
     pub struct FileEntry {
+        pub entry_offset: u64,
         pub path: String,
         pub size: u64,
         pub offset: u64,
@@ -19,12 +24,14 @@ pub mod header {
 
     #[derive(Debug)]
     pub struct DirEntry {
+        pub entry_offset: u64,
         pub path: String,
         pub subfiles: Vec<SubfileEntry>,
     }
 
     #[derive(Debug)]
     pub struct SubfileEntry {
+        pub entry_offset: u64,
         pub name: String,
         pub is_directory: bool,
     }
@@ -51,6 +58,8 @@ pub mod header {
             let file_count = reader.read_u32::<LE>().ok()?;
             let mut files = Vec::with_capacity(file_count as usize);
             for _ in 0..file_count {
+                let entry_offset = reader.seek(SeekFrom::Current(0)).ok()?;
+
                 let path_length = reader.read_u32::<LE>().ok()?;
                 let mut buf = vec![0; path_length as usize];
                 reader.read(&mut buf).ok()?;
@@ -60,6 +69,7 @@ pub mod header {
                 let offset = reader.read_u64::<LE>().ok()?;
 
                 files.push(FileEntry {
+                    entry_offset,
                     path,
                     size,
                     offset,
@@ -70,6 +80,8 @@ pub mod header {
             let dir_count = reader.read_u32::<LE>().ok()?;
             let mut dirs = Vec::with_capacity(dir_count as usize);
             for _ in 0..dir_count {
+                let entry_offset = reader.seek(SeekFrom::Current(0)).ok()?;
+
                 let path_length = reader.read_u32::<LE>().ok()?;
                 let mut buf = vec![0; path_length as usize];
                 reader.read(&mut buf).ok()?;
@@ -79,6 +91,8 @@ pub mod header {
                 let mut subfiles = Vec::with_capacity(subfile_count as usize);
 
                 for _ in 0..subfile_count {
+                    let entry_offset = reader.seek(SeekFrom::Current(0)).ok()?;
+
                     let name_length = reader.read_u32::<LE>().ok()?;
                     let mut buf = vec![0; name_length as usize];
                     reader.read(&mut buf).ok()?;
@@ -87,12 +101,14 @@ pub mod header {
                     let is_directory = reader.read_u8().ok()? != 0;
 
                     subfiles.push(SubfileEntry {
+                        entry_offset,
                         name,
                         is_directory,
                     });
                 }
 
                 dirs.push(DirEntry {
+                    entry_offset,
                     path,
                     subfiles,
                 });
@@ -113,3 +129,38 @@ pub mod header {
 }
 
 pub use header::Header;
+
+pub struct Wad {
+    header: Header,
+    path: PathBuf,
+    file: File,
+
+    files: HashMap<String, usize>,
+    dirs: HashMap<String, usize>,
+}
+
+impl Wad {
+    pub fn open<P: AsRef<Path>>(path: P) -> Option<Self> {
+        let mut file = File::open(path.as_ref()).ok()?;
+        let header = Header::read_from(&mut file)?;
+        
+        println!("{:?}", header);
+
+        // construct the path-to-entry-index hashmaps
+        let files = header.files.iter().enumerate()
+            .map(|(i, entry)| (entry.path.clone(), i))
+            .collect();
+        let dirs = header.dirs.iter().enumerate()
+            .map(|(i, entry)| (entry.path.clone(), i))
+            .collect();
+
+        Some(Wad {
+            header,
+            path: path.as_ref().to_path_buf(),
+            file,
+
+            files,
+            dirs,
+        })
+    }
+}
