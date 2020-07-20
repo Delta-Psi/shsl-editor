@@ -7,7 +7,11 @@ use error_chain::{error_chain, bail};
 error_chain! {
     foreign_links {
         Io(::std::io::Error);
-        InvalidString(std::string::FromUtf8Error);
+        InvalidString(::std::string::FromUtf8Error);
+    }
+
+    errors {
+        UnknownPath(p: String)
     }
 }
 
@@ -188,8 +192,8 @@ impl Wad {
 
     /// Reads the entire file in the specified path, if any, and appends it
     /// to buf.
-    pub fn read_file(&mut self, path: String, buf: &mut Vec<u8>) -> Option<()> {
-        let index = *self.files.get(&path)?;
+    pub fn read_file(&mut self, path: String, buf: &mut Vec<u8>) -> Result<()> {
+        let index = *self.files.get(&path).ok_or(ErrorKind::UnknownPath(path))?;
         let entry = &self.header.files[index];
 
         // allocate enough space for the data
@@ -198,10 +202,10 @@ impl Wad {
 
         // read the data
         let offset = self.header.size + entry.offset;
-        self.file.seek(SeekFrom::Start(offset)).ok()?;
-        self.file.read_exact(&mut buf[begin..]).ok()?;
+        self.file.seek(SeekFrom::Start(offset))?;
+        self.file.read_exact(&mut buf[begin..])?;
 
         // we're done
-        Some(())
+        Ok(())
     }
 }
