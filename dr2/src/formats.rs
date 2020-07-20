@@ -2,4 +2,5 @@
 
 pub mod wad;
 pub mod pak;
+pub mod tga;
 pub mod gmo;

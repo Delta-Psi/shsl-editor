@@ -148,7 +148,7 @@ pub use header::Header;
 
 pub struct Wad {
     header: Header,
-    _wad_path: PathBuf,
+    wad_path: PathBuf,
     file: File,
 
     files: HashMap<String, usize>,
@@ -172,7 +172,7 @@ impl Wad {
 
         Ok(Wad {
             header,
-            _wad_path: wad_path.to_path_buf(),
+            wad_path: wad_path.to_path_buf(),
             file,
 
             files,
@@ -194,8 +194,8 @@ impl Wad {
 
     /// Reads the entire file in the specified path, if any, and appends it
     /// to buf.
-    pub fn read_file(&mut self, path: String, buf: &mut Vec<u8>) -> Result<()> {
-        let index = *self.files.get(&path).ok_or(ErrorKind::UnknownPath(path))?;
+    pub fn read_file(&mut self, path: &str, buf: &mut Vec<u8>) -> Result<()> {
+        let index = *self.files.get(path).ok_or(ErrorKind::UnknownPath(path.to_string()))?;
         let entry = &self.header.files[index];
 
         // allocate enough space for the data
@@ -208,6 +208,57 @@ impl Wad {
         self.file.read_exact(&mut buf[begin..])?;
 
         // we're done
+        Ok(())
+    }
+
+    /// Injects a modified file into the WAD.
+    pub fn inject_file(&mut self, path: &str, data: &[u8]) -> Result<()> {
+        let index = *self.files.get(path).ok_or(ErrorKind::UnknownPath(path.to_string()))?;
+
+        // reopen the file in write mode
+        self.file = std::fs::OpenOptions::new()
+            .read(true)
+            .write(true)
+            .open(&self.wad_path)?;
+
+        let result = self.inject_file_inner(index, data);
+
+        // before checking for success, reopen in read mode
+        self.file = File::open(&self.wad_path)?;
+        
+        result
+    }
+
+    fn inject_file_inner(&mut self, index: usize, data: &[u8]) -> Result<()> {
+        use byteorder::{ReadBytesExt, WriteBytesExt, LittleEndian as LE};
+
+        let header_entry = &mut self.header.files[index];
+        let old_size = header_entry.size;
+        let new_size = data.len() as u64;
+
+        // seek to the offset offset
+        self.file.seek(SeekFrom::Start(header_entry.entry_offset))?;
+        assert_eq!(self.file.read_u32::<LE>()?, header_entry.path.len() as u32);
+        self.file.seek(SeekFrom::Current(header_entry.path.len() as i64))?;
+
+        // write new size
+        self.file.write_u64::<LE>(new_size)?;
+
+        if new_size <= old_size {
+            // don't overwrite offset
+            self.file.seek(SeekFrom::Start(self.header.size + header_entry.offset))?;
+            self.file.write_all(data)?;
+        } else {
+            // overwrite offset and append data
+            let total_size = self.file.metadata()?.len();
+            self.file.write_u64::<LE>(total_size - self.header.size)?;
+
+            self.file.seek(SeekFrom::End(0))?;
+            self.file.set_len(total_size + new_size)?;
+
+            self.file.write_all(data)?;
+        }
+
         Ok(())
     }
 }
