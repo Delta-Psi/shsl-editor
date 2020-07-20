@@ -1,3 +1,4 @@
+use std::io::{prelude::*, SeekFrom};
 use std::fs::File;
 use std::path::{Path, PathBuf};
 use std::collections::HashMap;
@@ -46,7 +47,7 @@ pub mod header {
 
             // read the first 16 bytes
             let mut buf = vec![0; 16];
-            reader.read(&mut buf).ok()?;
+            reader.read_exact(&mut buf).ok()?;
 
             // check if the magic bytes are present
             if &buf[0..4] != b"AGAR" {
@@ -62,7 +63,7 @@ pub mod header {
 
                 let path_length = reader.read_u32::<LE>().ok()?;
                 let mut buf = vec![0; path_length as usize];
-                reader.read(&mut buf).ok()?;
+                reader.read_exact(&mut buf).ok()?;
                 let path = String::from_utf8(buf).ok()?;
 
                 let size = reader.read_u64::<LE>().ok()?;
@@ -84,7 +85,7 @@ pub mod header {
 
                 let path_length = reader.read_u32::<LE>().ok()?;
                 let mut buf = vec![0; path_length as usize];
-                reader.read(&mut buf).ok()?;
+                reader.read_exact(&mut buf).ok()?;
                 let path = String::from_utf8(buf).ok()?;
 
                 let subfile_count = reader.read_u32::<LE>().ok()?;
@@ -95,7 +96,7 @@ pub mod header {
 
                     let name_length = reader.read_u32::<LE>().ok()?;
                     let mut buf = vec![0; name_length as usize];
-                    reader.read(&mut buf).ok()?;
+                    reader.read_exact(&mut buf).ok()?;
                     let name = String::from_utf8(buf).ok()?;
                     
                     let is_directory = reader.read_u8().ok()? != 0;
@@ -132,7 +133,7 @@ pub use header::Header;
 
 pub struct Wad {
     header: Header,
-    path: PathBuf,
+    _wad_path: PathBuf,
     file: File,
 
     files: HashMap<String, usize>,
@@ -140,11 +141,11 @@ pub struct Wad {
 }
 
 impl Wad {
-    pub fn open<P: AsRef<Path>>(path: P) -> Option<Self> {
-        let mut file = File::open(path.as_ref()).ok()?;
+    pub fn open<P: AsRef<Path>>(wad_path: P) -> Option<Self> {
+        let wad_path = wad_path.as_ref();
+
+        let mut file = File::open(wad_path).ok()?;
         let header = Header::read_from(&mut file)?;
-        
-        println!("{:?}", header);
 
         // construct the path-to-entry-index hashmaps
         let files = header.files.iter().enumerate()
@@ -156,11 +157,42 @@ impl Wad {
 
         Some(Wad {
             header,
-            path: path.as_ref().to_path_buf(),
+            _wad_path: wad_path.to_path_buf(),
             file,
 
             files,
             dirs,
         })
+    }
+
+    pub fn header(&self) -> &Header {
+        &self.header
+    }
+
+    pub fn files(&self) -> &HashMap<String, usize> {
+        &self.files
+    }
+
+    pub fn dirs(&self) -> &HashMap<String, usize> {
+        &self.dirs
+    }
+
+    /// Reads the entire file in the specified path, if any, and appends it
+    /// to buf.
+    pub fn read_file(&mut self, path: String, buf: &mut Vec<u8>) -> Option<()> {
+        let index = *self.files.get(&path)?;
+        let entry = &self.header.files[index];
+
+        // allocate enough space for the data
+        let begin = buf.len();
+        buf.resize(begin + entry.size as usize, 0);
+
+        // read the data
+        let offset = self.header.size + entry.offset;
+        self.file.seek(SeekFrom::Start(offset)).ok()?;
+        self.file.read_exact(&mut buf[begin..]).ok()?;
+
+        // we're done
+        Some(())
     }
 }

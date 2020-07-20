@@ -2,6 +2,11 @@ use std::env;
 use dr2::formats::wad;
 
 fn main() {
-    let path = env::args_os().nth(1).unwrap();
-    let _wad = wad::Wad::open(&path).unwrap();
+    let wad_path = env::args_os().nth(1).expect("wad path not provided");
+    let wad = wad::Wad::open(&wad_path).expect("unable to read wad file");
+    let header = wad.header();
+
+    for entry in &header.files {
+        println!("{} (offset {}, size {})", entry.path, entry.offset, entry.size);
+    }
 }
