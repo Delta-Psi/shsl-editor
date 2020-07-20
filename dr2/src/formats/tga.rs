@@ -19,18 +19,26 @@ impl<'a> TgaExt for Tga<'a> {
         let mut encoder = png::Encoder::new(writer,
             self.width() as u32,
             self.height() as u32);
+        let mut pixel_data = self.pixel_data.to_vec();
 
         match self.header.image_type {
             ImageType::ColorMapped => {
                 encoder.set_color(png::ColorType::Indexed);
                 let color_map = self.color_map.unwrap();
 
-                // split the color map into PLTE (color) and tRNS (alpha) chunks
                 match self.header.color_map_depth {
                     24 => {
-                        encoder.set_palette(color_map.to_vec());
+                        let mut plte = color_map.to_vec();
+                    
+                        // fix ordering (BGR to RGB)
+                        for i in 0..self.header.color_map_len as usize {
+                            plte.swap(3*i, 3*i+2);
+                        }
+
+                        encoder.set_palette(plte);
                     },
                     32 => {
+                        // split the color map into PLTE (color) and tRNS (alpha) chunks
                         let mut plte = Vec::with_capacity(self.header.color_map_len as usize*3);
                         let mut trns = Vec::with_capacity(self.header.color_map_len as usize);
 
@@ -60,8 +68,6 @@ impl<'a> TgaExt for Tga<'a> {
 
         let w = self.width() as usize;
         let h = self.height() as usize;
-        let mut pixel_data = self.pixel_data.to_vec();
-
         match (self.header.image_descriptor & 0xf0) >> 4 {
             0b10 => (),
             0b01 => pixel_data.reverse(),
