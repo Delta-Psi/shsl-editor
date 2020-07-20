@@ -230,19 +230,18 @@ impl Wad {
     }
 
     fn inject_file_inner(&mut self, index: usize, data: &[u8]) -> Result<()> {
-        use byteorder::{ReadBytesExt, WriteBytesExt, LittleEndian as LE};
+        use byteorder::{WriteBytesExt, LittleEndian as LE};
 
         let header_entry = &mut self.header.files[index];
         let old_size = header_entry.size;
         let new_size = data.len() as u64;
 
         // seek to the offset offset
-        self.file.seek(SeekFrom::Start(header_entry.entry_offset))?;
-        assert_eq!(self.file.read_u32::<LE>()?, header_entry.path.len() as u32);
-        self.file.seek(SeekFrom::Current(header_entry.path.len() as i64))?;
+        self.file.seek(SeekFrom::Start(header_entry.entry_offset + 4 + header_entry.path.len() as u64))?;
 
         // write new size
         self.file.write_u64::<LE>(new_size)?;
+        header_entry.size = new_size;
 
         if new_size <= old_size {
             // don't overwrite offset
@@ -260,8 +259,6 @@ impl Wad {
 
             self.file.write_all(data)?;
         }
-
-        header_entry.size = new_size;
 
         Ok(())
     }
