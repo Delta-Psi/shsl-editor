@@ -2,7 +2,7 @@ use std::io::prelude::*;
 use std::io::BufReader;
 use byteorder::{ReadBytesExt, LittleEndian as LE};
 
-use error_chain::error_chain;
+use error_chain::{error_chain, bail};
 error_chain! {
     foreign_links {
         Io(::std::io::Error);
@@ -25,9 +25,14 @@ impl Header {
         // read entry count
         let count = reader.read_u32::<LE>()?;
         let mut offsets = Vec::with_capacity(count as usize);
-        for _ in 0..count {
+        for i in 0..count as usize {
             let offset = reader.read_u32::<LE>()?;
             offsets.push(offset);
+
+            // ensure offsets are ascending
+            if i > 0 && offsets[i-1] >= offset {
+                bail!(ErrorKind::InvalidOffset);
+            }
         }
 
         Ok(Self {
