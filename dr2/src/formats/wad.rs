@@ -195,7 +195,7 @@ impl Wad {
     /// Reads the entire file in the specified path, if any, and appends it
     /// to buf.
     pub fn read_file(&mut self, path: &str, buf: &mut Vec<u8>) -> Result<()> {
-        let index = *self.files.get(path).ok_or(ErrorKind::UnknownPath(path.to_string()))?;
+        let index = *self.files.get(path).ok_or_else(|| ErrorKind::UnknownPath(path.to_string()))?;
         let entry = &self.header.files[index];
 
         // allocate enough space for the data
@@ -213,7 +213,7 @@ impl Wad {
 
     /// Injects a modified file into the WAD.
     pub fn inject_file(&mut self, path: &str, data: &[u8]) -> Result<()> {
-        let index = *self.files.get(path).ok_or(ErrorKind::UnknownPath(path.to_string()))?;
+        let index = *self.files.get(path).ok_or_else(|| ErrorKind::UnknownPath(path.to_string()))?;
 
         // reopen the file in write mode
         self.file = std::fs::OpenOptions::new()
@@ -251,13 +251,17 @@ impl Wad {
         } else {
             // overwrite offset and append data
             let total_size = self.file.metadata()?.len();
-            self.file.write_u64::<LE>(total_size - self.header.size)?;
+            let new_offset = total_size - self.header.size;
+            self.file.write_u64::<LE>(new_offset)?;
+            header_entry.offset = new_offset;
 
             self.file.seek(SeekFrom::End(0))?;
             self.file.set_len(total_size + new_size)?;
 
             self.file.write_all(data)?;
         }
+
+        header_entry.size = new_size;
 
         Ok(())
     }

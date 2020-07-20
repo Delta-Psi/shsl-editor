@@ -44,7 +44,7 @@ fn main() {
                 let wad_path = matches.value_of("WAD").unwrap();
                 let wad = wad::Wad::open(&wad_path).expect("could not load wad");
 
-                for (path, _) in wad.files() {
+                for path in wad.files().keys() {
                     println!("{}", path);
                 }
             },
@@ -62,7 +62,7 @@ fn main() {
                 wad.read_file(&inner_path, &mut data).expect("could not read inner file");
 
                 // extract filename
-                let fname = inner_path.rsplitn(2, '/').nth(0).unwrap();
+                let fname = inner_path.rsplitn(2, '/').next().unwrap();
 
                 let out_path = matches.value_of("OUTDIR").unwrap();
                 let mut out_path = PathBuf::from(out_path);
