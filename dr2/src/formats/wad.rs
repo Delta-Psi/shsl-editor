@@ -6,17 +6,8 @@ use std::path::{Path, PathBuf};
 use std::collections::HashMap;
 use std::cell::RefCell;
 
-use error_chain::{error_chain, bail};
-error_chain! {
-    foreign_links {
-        Io(::std::io::Error);
-        InvalidString(::std::string::FromUtf8Error);
-    }
-
-    errors {
-        UnknownPath(p: String)
-    }
-}
+use crate::errors::*;
+use error_chain::bail;
 
 pub mod header {
     use std::io::{prelude::*, SeekFrom, BufReader};
@@ -194,10 +185,27 @@ impl Wad {
         &self.dirs
     }
 
+    pub fn list_dir(&self, path: &'static str, only_files: bool) -> Result<impl Iterator<Item = String>> {
+        let index = *self.dirs.get(path).ok_or_else(|| ErrorKind::UnknownWadDir(path.to_string()))?;
+        let entry = &self.header.dirs[index];
+
+        let paths: Vec<_> = entry.subfiles.iter()
+            .filter(|sf| !only_files || !sf.is_directory)
+            .map(|sf| {
+                let mut path = path.to_string();
+                path.push_str("/");
+                path.push_str(&sf.name);
+                path
+            })
+        .collect();
+
+        Ok(paths.into_iter())
+    }
+
     /// Reads the entire file in the specified path, if any, and appends it
     /// to buf.
     pub fn read_file(&self, path: &str, buf: &mut Vec<u8>) -> Result<()> {
-        let index = *self.files.get(path).ok_or_else(|| ErrorKind::UnknownPath(path.to_string()))?;
+        let index = *self.files.get(path).ok_or_else(|| ErrorKind::UnknownWadFile(path.to_string()))?;
         let entry = &self.header.files[index];
         let mut file = self.file.borrow_mut();
 
@@ -216,7 +224,7 @@ impl Wad {
 
     /// Injects a modified file into the WAD.
     pub fn inject_file(&mut self, path: &str, data: &[u8]) -> Result<()> {
-        let index = *self.files.get(path).ok_or_else(|| ErrorKind::UnknownPath(path.to_string()))?;
+        let index = *self.files.get(path).ok_or_else(|| ErrorKind::UnknownWadFile(path.to_string()))?;
 
         // reopen the file in write mode
         *self.file.borrow_mut() = std::fs::OpenOptions::new()

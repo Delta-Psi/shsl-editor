@@ -2,17 +2,8 @@ use std::io::prelude::*;
 use std::io::{BufReader, Cursor};
 use byteorder::{ReadBytesExt, WriteBytesExt, LittleEndian as LE};
 
-use error_chain::{error_chain, bail};
-error_chain! {
-    foreign_links {
-        Io(::std::io::Error);
-    }
-
-    errors {
-        InvalidOffset
-        InvalidIndices
-    }
-}
+use crate::errors::*;
+use error_chain::bail;
 
 pub struct Header {
     pub offsets: Vec<u32>,
@@ -32,7 +23,7 @@ impl Header {
 
             // ensure offsets are ascending
             if i > 0 && offsets[i-1] >= offset {
-                bail!(ErrorKind::InvalidOffset);
+                bail!(ErrorKind::InvalidPakOffset);
             }
         }
 
@@ -86,7 +77,7 @@ impl Pak {
         let header = Header::read_from(Cursor::new(data))?;
         // check if no offset is larger than the actual data length
         if header.offsets.iter().any(|o| *o as usize >= data.len()) {
-            bail!(ErrorKind::InvalidOffset);
+            bail!(ErrorKind::InvalidPakOffset);
         }
 
         let mut offsets = header.offsets.clone();
@@ -128,12 +119,12 @@ impl Pak {
 
     pub fn index_mut(&mut self, indices: &[usize]) -> Result<&mut Entry> {
         if indices.is_empty() {
-            bail!(ErrorKind::InvalidIndices);
+            bail!(ErrorKind::InvalidPakIndices);
         }
 
         let idx = indices[0];
         if idx >= self.entries.len() {
-            bail!(ErrorKind::InvalidIndices);
+            bail!(ErrorKind::InvalidPakIndices);
         }
 
         if indices.len() == 1 {
@@ -147,7 +138,7 @@ impl Pak {
             if let Entry::Pak(pak) = entry {
                 pak.index_mut(&indices[1..])
             } else {
-                bail!(ErrorKind::InvalidIndices)
+                bail!(ErrorKind::InvalidPakIndices)
             }
         }
     }

@@ -1,18 +1,7 @@
-use crate::formats::{wad::Wad, pak::Pak};
 use std::path::Path;
 use std::collections::HashMap;
-
-use error_chain::error_chain;
-error_chain! {
-    foreign_links {
-        Io(std::io::Error);
-    }
-
-    links {
-        Wad(crate::formats::wad::Error, crate::formats::wad::ErrorKind);
-        Pak(crate::formats::pak::Error, crate::formats::pak::ErrorKind);
-    }
-}
+use crate::formats::{wad::Wad, pak::Pak};
+use crate::errors::*;
 
 pub struct WadPlus {
     pub wad: Wad,
@@ -20,6 +9,13 @@ pub struct WadPlus {
 }
 
 impl WadPlus {
+    pub fn new(wad: Wad) -> Self {
+        Self {
+            wad,
+            paks: HashMap::new(),
+        }
+    }
+
     /// Allows easier manipulation of PAK files.
     pub fn get_pak(&mut self, path: &str) -> Result<&mut Pak> {
         if !self.paks.contains_key(path) {
@@ -53,13 +49,41 @@ pub struct GameFiles {
     pub dr2_data_us: WadPlus,
 }
 
-pub trait Data: Sized {
-    fn extract(files: &GameFiles, path: &Path) -> Result<Self>;
-    //fn inject(&self, files: &mut GameFiles, path: &Path) -> Result<()>;
+impl GameFiles {
+    pub fn new<P1: AsRef<Path>, P2: AsRef<Path>>(dr2_data_path: P1, dr2_data_us_path: P2) -> Result<Self> {
+        Ok(GameFiles {
+            dr2_data: WadPlus::new(Wad::open(dr2_data_path)?),
+            dr2_data_us: WadPlus::new(Wad::open(dr2_data_us_path)?),
+        })
+    }
 }
+
+pub trait Data: Sized {
+    fn extract<P: AsRef<Path>>(files: &GameFiles, path: P) -> Result<()>;
+    //fn load(path: &Path) -> Result<Self>;
+    //fn inject(&self, files: &mut GameFiles) -> Result<()>;
+}
+
+/*
+/// References a WAD file.
+#[derive(Debug, Hash, PartialEq, Eq)]
+pub enum WadRef {
+    Data,
+    DataUs,
+}
+*/
 
 pub mod music;
 pub mod sprites;
 
-pub struct GameData {
+pub struct GameData;
+
+impl Data for GameData {
+    fn extract<P: AsRef<Path>>(files: &GameFiles, path: P) -> Result<()> {
+        let path = path.as_ref();
+
+        sprites::Sprites::extract(files, path.join("sprites"))?;
+
+        Ok(())
+    }
 }

@@ -169,6 +169,7 @@ dependencies = [
  "error-chain 0.12.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "png 0.16.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "tinytga 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "toml 0.5.6 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]

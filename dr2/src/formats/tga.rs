@@ -3,18 +3,19 @@ pub use tinytga::*;
 
 use std::io::prelude::*;
 
-use error_chain::error_chain;
-error_chain! {
-    foreign_links {
-        PngEncoding(png::EncodingError);
-    }
-}
+use crate::errors::*;
 
-pub trait TgaExt {
+pub trait TgaExt<'a>: Sized {
+    /// This method is preferred, as it returns an actually usable error type.
+    fn from_bytes(data: &'a [u8]) -> Result<Self>;
     fn to_png<W: Write>(&self, writer: W) -> Result<()>;
 }
 
-impl<'a> TgaExt for Tga<'a> {
+impl<'a> TgaExt<'a> for Tga<'a> {
+    fn from_bytes(data: &'a [u8]) -> Result<Self> {
+        Self::from_slice(data).map_err(|_| ErrorKind::TgaDecoding.into())
+    }
+
     fn to_png<W: Write>(&self, writer: W) -> Result<()> {
         let mut encoder = png::Encoder::new(writer,
             self.width() as u32,

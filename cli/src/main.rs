@@ -5,6 +5,18 @@ fn main() {
         .version("0.1.0")
         .author("Delta-Psi")
         .setting(AppSettings::SubcommandRequiredElseHelp)
+        .subcommand(SubCommand::with_name("extract")
+            .about("Extracts the game data from dr2_data.wad and dr2_data_us.wad into a folder")
+            .arg(Arg::with_name("DR2_DATA")
+                .help("path to dr2_data.wad")
+                .required(true))
+            .arg(Arg::with_name("DR2_DATA_US")
+                .help("path to dr2_data_us.wad")
+                .required(true))
+            .arg(Arg::with_name("OUTDIR")
+                .help("output directory")
+                .required(true)))
+
         .subcommand(SubCommand::with_name("wad-list")
             .about("Lists all files present in a WAD file")
             .arg(Arg::with_name("WAD")
@@ -46,6 +58,14 @@ fn main() {
 
     if let (subcommand, Some(matches)) = matches.subcommand() {
         match subcommand {
+            "extract" => {
+                let dr2_data_path = matches.value_of("DR2_DATA").unwrap();
+                let dr2_data_us_path = matches.value_of("DR2_DATA_US").unwrap();
+                let outdir = matches.value_of("OUTDIR").unwrap();
+
+                extract(dr2_data_path, dr2_data_us_path, outdir);
+            }
+
             "wad-list" => {
                 use dr2::formats::wad;
 
@@ -117,4 +137,11 @@ fn main() {
             _ => unreachable!(),
         }
     }
+}
+
+pub fn extract(dr2_data_path: &str, dr2_data_us_path: &str, outdir: &str) {
+    use dr2::game_data::{self, Data};
+
+    let game_files = game_data::GameFiles::new(dr2_data_path, dr2_data_us_path).unwrap();
+    game_data::GameData::extract(&game_files, outdir).unwrap();
 }
