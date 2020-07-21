@@ -63,7 +63,7 @@ fn main() {
                 use dr2::formats::wad;
 
                 let wad_path = matches.value_of("WAD").unwrap();
-                let mut wad = wad::Wad::open(&wad_path).expect("could not load wad");
+                let wad = wad::Wad::open(&wad_path).expect("could not load wad");
 
                 let inner_path = matches.value_of("PATH").unwrap();
                 let mut data = Vec::new();

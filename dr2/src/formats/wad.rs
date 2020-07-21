@@ -4,6 +4,7 @@ use std::io::{prelude::*, SeekFrom};
 use std::fs::File;
 use std::path::{Path, PathBuf};
 use std::collections::HashMap;
+use std::cell::RefCell;
 
 use error_chain::{error_chain, bail};
 error_chain! {
@@ -149,7 +150,8 @@ pub use header::Header;
 pub struct Wad {
     header: Header,
     wad_path: PathBuf,
-    file: File,
+    // interior mutability
+    file: RefCell<File>,
 
     files: HashMap<String, usize>,
     dirs: HashMap<String, usize>,
@@ -173,7 +175,7 @@ impl Wad {
         Ok(Wad {
             header,
             wad_path: wad_path.to_path_buf(),
-            file,
+            file: RefCell::new(file),
 
             files,
             dirs,
@@ -194,9 +196,10 @@ impl Wad {
 
     /// Reads the entire file in the specified path, if any, and appends it
     /// to buf.
-    pub fn read_file(&mut self, path: &str, buf: &mut Vec<u8>) -> Result<()> {
+    pub fn read_file(&self, path: &str, buf: &mut Vec<u8>) -> Result<()> {
         let index = *self.files.get(path).ok_or_else(|| ErrorKind::UnknownPath(path.to_string()))?;
         let entry = &self.header.files[index];
+        let mut file = self.file.borrow_mut();
 
         // allocate enough space for the data
         let begin = buf.len();
@@ -204,8 +207,8 @@ impl Wad {
 
         // read the data
         let offset = self.header.size + entry.offset;
-        self.file.seek(SeekFrom::Start(offset))?;
-        self.file.read_exact(&mut buf[begin..])?;
+        file.seek(SeekFrom::Start(offset))?;
+        file.read_exact(&mut buf[begin..])?;
 
         // we're done
         Ok(())
@@ -216,7 +219,7 @@ impl Wad {
         let index = *self.files.get(path).ok_or_else(|| ErrorKind::UnknownPath(path.to_string()))?;
 
         // reopen the file in write mode
-        self.file = std::fs::OpenOptions::new()
+        *self.file.borrow_mut() = std::fs::OpenOptions::new()
             .read(true)
             .write(true)
             .open(&self.wad_path)?;
@@ -224,40 +227,41 @@ impl Wad {
         let result = self.inject_file_inner(index, data);
 
         // before checking for success, reopen in read mode
-        self.file = File::open(&self.wad_path)?;
+        *self.file.borrow_mut() = File::open(&self.wad_path)?;
         
         result
     }
 
     fn inject_file_inner(&mut self, index: usize, data: &[u8]) -> Result<()> {
         use byteorder::{WriteBytesExt, LittleEndian as LE};
+        let mut file = self.file.borrow_mut();
 
         let header_entry = &mut self.header.files[index];
         let old_size = header_entry.size;
         let new_size = data.len() as u64;
 
         // seek to the offset offset
-        self.file.seek(SeekFrom::Start(header_entry.entry_offset + 4 + header_entry.path.len() as u64))?;
+        file.seek(SeekFrom::Start(header_entry.entry_offset + 4 + header_entry.path.len() as u64))?;
 
         // write new size
-        self.file.write_u64::<LE>(new_size)?;
+        file.write_u64::<LE>(new_size)?;
         header_entry.size = new_size;
 
         if new_size <= old_size {
             // don't overwrite offset
-            self.file.seek(SeekFrom::Start(self.header.size + header_entry.offset))?;
-            self.file.write_all(data)?;
+            file.seek(SeekFrom::Start(self.header.size + header_entry.offset))?;
+            file.write_all(data)?;
         } else {
             // overwrite offset and append data
-            let total_size = self.file.metadata()?.len();
+            let total_size = file.metadata()?.len();
             let new_offset = total_size - self.header.size;
-            self.file.write_u64::<LE>(new_offset)?;
+            file.write_u64::<LE>(new_offset)?;
             header_entry.offset = new_offset;
 
-            self.file.seek(SeekFrom::End(0))?;
-            self.file.set_len(total_size + new_size)?;
+            file.seek(SeekFrom::End(0))?;
+            file.set_len(total_size + new_size)?;
 
-            self.file.write_all(data)?;
+            file.write_all(data)?;
         }
 
         Ok(())
