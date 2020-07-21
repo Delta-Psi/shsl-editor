@@ -1,4 +1,5 @@
 use super::*;
+use crate::formats::tga::{Tga, TgaExt};
 
 pub const CHARACTER_COUNT: usize = 25;
 
@@ -24,13 +25,17 @@ impl Data for Sprites {
                 let mut data = Vec::new();
                 wad.read_file(&wad_path, &mut data)?;
 
+                let image = Tga::from_bytes(&data)?;
+                let mut png = std::io::Cursor::new(Vec::new());
+                image.to_png(&mut png)?;
+
                 let path = path.join(format!("{:02}", character));
                 std::fs::create_dir_all(&path)?;
-                let path = path.join(format!("{:02}.tga", sprite));
+                let path = path.join(format!("{:02}.png", sprite));
 
                 println!("writing {}", path.display());
                 let mut file = std::fs::File::create(path)?;
-                file.write_all(&data)?;
+                file.write_all(&png.into_inner())?;
             }
         }
 
