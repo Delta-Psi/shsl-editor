@@ -1,5 +1,5 @@
 pub mod formats;
-pub mod metadata;
+pub mod game_data;
 
 #[cfg(test)]
 mod tests;
