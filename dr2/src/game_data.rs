@@ -58,11 +58,13 @@ impl GameFiles {
     }
 }
 
+/*
 pub trait Data: Sized {
     fn extract<P: AsRef<Path>>(files: &GameFiles, path: P) -> Result<()>;
     fn inject<P: AsRef<Path>>(files: &mut GameFiles, path: P) -> Result<()>;
     //fn load(path: &Path) -> Result<Self>;
 }
+*/
 
 /*
 /// References a WAD file.
@@ -74,24 +76,20 @@ pub enum WadRef {
 */
 
 pub mod music;
-pub mod sprites;
+pub mod dialogue;
 
-pub struct GameData;
+pub fn extract<P: AsRef<Path>>(files: &GameFiles, path: P) -> Result<()> {
+    let path = path.as_ref();
 
-impl Data for GameData {
-    fn extract<P: AsRef<Path>>(files: &GameFiles, path: P) -> Result<()> {
-        let path = path.as_ref();
+    dialogue::extract(files, &path.join("dialogue"))?;
 
-        sprites::Sprites::extract(files, path.join("sprites"))?;
+    Ok(())
+}
 
-        Ok(())
-    }
+pub fn inject<P: AsRef<Path>>(files: &mut GameFiles, path: P) -> Result<()> {
+    let path = path.as_ref();
 
-    fn inject<P: AsRef<Path>>(files: &mut GameFiles, path: P) -> Result<()> {
-        let path = path.as_ref();
+    dialogue::inject(files, &path.join("dialogue"))?;
 
-        sprites::Sprites::inject(files, path.join("sprites"))?;
-
-        Ok(())
-    }
+    Ok(())
 }

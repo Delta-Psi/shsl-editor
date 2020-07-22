@@ -9,6 +9,7 @@ mod errors {
             Io(std::io::Error);
             InvalidString(std::string::FromUtf8Error);
             PngDecoding(png::DecodingError);
+            Toml(toml::ser::Error);
         }
 
         errors {

@@ -44,7 +44,50 @@ pub enum Entry {
 }
 
 impl Entry {
-    fn encode(&self) -> Result<Vec<u8>> {
+    pub fn as_string(&mut self) -> Option<String> {
+        match self {
+            Entry::Data(data) => {
+                let (i, _) = data.iter().enumerate().find(|(_, v)| **v == 0)?;
+                let string = String::from_utf8(data[0..i].to_owned()).ok()?;
+                *self = Entry::String(string.clone().into_boxed_str());
+                Some(string)
+            },
+            Entry::String(string) => Some(string.to_string()),
+            Entry::WString(_) => None,
+            Entry::Pak(_) => None,
+        }
+    }
+
+    pub fn as_wstring(&mut self) -> Option<String> {
+        match self {
+            Entry::Data(data) => {
+                use std::io::prelude::*;
+                let mut cursor = std::io::Cursor::new(data.as_ref());
+
+                let mut bom = [0, 0];
+                cursor.read_exact(&mut bom).ok()?;
+                if bom != [0xff, 0xfe] {
+                    return None;
+                }
+
+                let mut data = Vec::with_capacity(data.len()/2 - 4);
+                let mut v = cursor.read_u16::<LE>().ok()?;
+                while v != 0 {
+                    data.push(v);
+                    v = cursor.read_u16::<LE>().ok()?;
+                }
+
+                let string = String::from_utf16(&data).ok()?;
+                *self = Entry::WString(string.clone().into_boxed_str());
+                Some(string)
+            },
+            Entry::String(_) => None,
+            Entry::WString(string) => Some(string.to_string()),
+            Entry::Pak(_) => None,
+        }
+    }
+
+    pub fn encode(&self) -> Result<Vec<u8>> {
         let mut writer = Cursor::new(Vec::new());
 
         match self {
@@ -69,7 +112,7 @@ impl Entry {
 }
 
 pub struct Pak {
-    entries: Vec<Entry>,
+    pub entries: Vec<Entry>,
 }
 
 impl Pak {
@@ -117,9 +160,9 @@ impl Pak {
         Ok(())
     }
 
-    pub fn index_mut(&mut self, indices: &[usize]) -> Result<&mut Entry> {
+    pub fn index_pak(&mut self, indices: &[usize]) -> Result<&mut Pak> {
         if indices.is_empty() {
-            bail!(ErrorKind::InvalidPakIndices);
+            return Ok(self);
         }
 
         let idx = indices[0];
@@ -127,34 +170,34 @@ impl Pak {
             bail!(ErrorKind::InvalidPakIndices);
         }
 
-        if indices.len() == 1 {
-            Ok(&mut self.entries[idx])
-        } else {
-            let entry = &mut self.entries[idx];
-            if let Entry::Data(data) = entry {
-                *entry = Entry::Pak(Box::new(Pak::from_bytes(&data)?));
-            }
+        let entry = &mut self.entries[idx];
+        if let Entry::Data(data) = entry {
+            *entry = Entry::Pak(Box::new(Pak::from_bytes(&data)?));
+        }
 
-            if let Entry::Pak(pak) = entry {
-                pak.index_mut(&indices[1..])
-            } else {
-                bail!(ErrorKind::InvalidPakIndices)
-            }
+        if let Entry::Pak(pak) = entry {
+            pak.index_pak(&indices[1..])
+        } else {
+            bail!(ErrorKind::InvalidPakIndices)
         }
     }
 
+    pub fn index(&mut self, indices: &[usize]) -> Result<&mut Entry> {
+        Ok(&mut self.index_pak(&indices[0..indices.len()-1])?.entries[indices[indices.len()-1]])
+    }
+
     pub fn replace_data(&mut self, indices: &[usize], data: &[u8]) -> Result<()> {
-        *self.index_mut(indices)? = Entry::Data(data.into());
+        *self.index(indices)? = Entry::Data(data.into());
         Ok(())
     }
 
     pub fn replace_string(&mut self, indices: &[usize], string: &str) -> Result<()> {
-        *self.index_mut(indices)? = Entry::String(string.into());
+        *self.index(indices)? = Entry::String(string.into());
         Ok(())
     }
 
     pub fn replace_wide_string(&mut self, indices: &[usize], string: &str) -> Result<()> {
-        *self.index_mut(indices)? = Entry::WString(string.into());
+        *self.index(indices)? = Entry::WString(string.into());
         Ok(())
     }
 }

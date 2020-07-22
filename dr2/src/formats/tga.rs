@@ -93,7 +93,7 @@ impl<'a> TgaExt<'a> for Tga<'a> {
             _ => unimplemented!(),
         }
 
-        encoder.write_image_rows(&pixel_data)?;
+        encoder.write_image_rows(&pixel_data[0..w*h*(self.header.pixel_depth/8) as usize])?;
         encoder.finish()?;
 
         Ok(())

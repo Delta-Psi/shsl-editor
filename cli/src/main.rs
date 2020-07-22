@@ -177,15 +177,15 @@ fn main() {
 }
 
 pub fn extract(dr2_data_path: &str, dr2_data_us_path: &str, outdir: &str) {
-    use dr2::game_data::{self, Data};
+    use dr2::game_data;
 
     let game_files = game_data::GameFiles::new(dr2_data_path, dr2_data_us_path).unwrap();
-    game_data::GameData::extract(&game_files, outdir).unwrap();
+    game_data::extract(&game_files, outdir).unwrap();
 }
 
 pub fn inject(dr2_data_path: &str, dr2_data_us_path: &str, indir: &str) {
-    use dr2::game_data::{self, Data};
+    use dr2::game_data;
 
     let mut game_files = game_data::GameFiles::new(dr2_data_path, dr2_data_us_path).unwrap();
-    game_data::GameData::inject(&mut game_files, indir).unwrap();
+    game_data::inject(&mut game_files, indir).unwrap();
 }
