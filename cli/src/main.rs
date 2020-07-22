@@ -1,10 +1,14 @@
+#![windows_subsystem = "console"]
+
+pub const VERSION: &'static str = "0.1.0";
+
 fn main() {
-    use clap::{App, AppSettings, SubCommand, Arg};
+    use clap::{App, SubCommand, Arg};
 
     let app = App::new("SHSL Editor CLI")
-        .version("0.1.0")
+        .version(VERSION)
         .author("Delta-Psi")
-        .setting(AppSettings::SubcommandRequiredElseHelp)
+        //.setting(AppSettings::SubcommandRequiredElseHelp)
         .subcommand(SubCommand::with_name("extract")
             .about("Extracts the game data from dr2_data.wad and dr2_data_us.wad into a folder")
             .arg(Arg::with_name("DR2_DATA")
@@ -173,6 +177,33 @@ fn main() {
 
             _ => unreachable!(),
         }
+    } else {
+        // interactive mod
+        use std::io::prelude::*;
+
+        println!("SHSL Editor CLI {} by Delta-Psi", VERSION);
+        let mut stdout = std::io::stdout();
+        let stdin = std::io::stdin();
+        let mut stdin = stdin.lock();
+
+        print!("Path of dr2_data.wad: ");
+        stdout.flush().unwrap();
+        let mut dr2_data_path = String::new();
+        stdin.read_line(&mut dr2_data_path).unwrap();
+
+        print!("Path of dr2_data_us.wad: ");
+        stdout.flush().unwrap();
+        let mut dr2_data_us_path = String::new();
+        stdin.read_line(&mut dr2_data_us_path).unwrap();
+
+        print!("Output directory: ");
+        stdout.flush().unwrap();
+        let mut outdir = String::new();
+        stdin.read_line(&mut outdir).unwrap();
+
+        extract(dr2_data_path.trim(),
+                dr2_data_us_path.trim(),
+                outdir.trim());
     }
 }
 
