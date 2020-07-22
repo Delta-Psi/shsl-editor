@@ -1,21 +1,22 @@
 use std::path::Path;
-use std::collections::HashMap;
-use crate::formats::{wad::Wad, pak::Pak};
+//use std::collections::HashMap;
+use crate::formats::wad::Wad;
 use crate::errors::*;
 
 pub struct WadPlus {
     pub wad: Wad,
-    paks: HashMap<String, Pak>,
+    //paks: HashMap<String, Pak>,
 }
 
 impl WadPlus {
     pub fn new(wad: Wad) -> Self {
         Self {
             wad,
-            paks: HashMap::new(),
+            //paks: HashMap::new(),
         }
     }
 
+/*
     /// Allows easier manipulation of PAK files.
     pub fn get_pak(&mut self, path: &str) -> Result<&mut Pak> {
         if !self.paks.contains_key(path) {
@@ -41,6 +42,7 @@ impl WadPlus {
 
         Ok(())
     }
+*/
 }
 
 /// Contains handles to every relevant game file.
