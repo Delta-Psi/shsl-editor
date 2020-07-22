@@ -83,15 +83,18 @@ pub mod dialogue;
 pub fn extract<P: AsRef<Path>>(files: &GameFiles, path: P) -> Result<()> {
     let path = path.as_ref();
 
-    dialogue::extract(files, &path.join("dialogue"))?;
+    dialogue::extract(files, path)?;
+    music::extract(files, path)?;
 
     Ok(())
 }
 
 pub fn inject<P: AsRef<Path>>(files: &mut GameFiles, path: P) -> Result<()> {
     let path = path.as_ref();
+    let _files = &files;
 
     dialogue::inject(files, &path.join("dialogue"))?;
+    //music::inject(files, &path.join("music"))?;
 
     Ok(())
 }

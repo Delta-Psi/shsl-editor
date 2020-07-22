@@ -3,6 +3,7 @@ use crate::formats::tga::{Tga, TgaExt};
 use crate::formats::pak::Pak;
 
 pub fn extract(files: &GameFiles, path: &Path) -> Result<()> {
+    let path = path.join("dialogue");
     std::fs::create_dir_all(&path)?;
 
     // NAMES (text)
@@ -20,6 +21,7 @@ pub fn extract(files: &GameFiles, path: &Path) -> Result<()> {
         }
 
         let file = toml::to_string_pretty(&names)?;
+        println!("writing {}", path.display());
         std::fs::write(path, file.as_bytes())?;
     }
 
@@ -79,31 +81,7 @@ pub fn extract(files: &GameFiles, path: &Path) -> Result<()> {
 }
 
 pub fn inject(files: &mut GameFiles, path: &Path) -> Result<()> {
-    // SPRITES
-    {
-        let wad = &mut files.dr2_data.wad;
-
-        for wad_path in wad.list_dir("Dr2/data/all/cg", true)? {
-            // search for files matching `bustup_16_19.tga`
-            let result = (|| {
-                let string = wad_path.strip_prefix("Dr2/data/all/cg/bustup_")?;
-                let string = string.strip_suffix(".tga")?;
-                let indices: Vec<_> = string.splitn(2, '_').collect();
-
-                Some((indices[0].parse::<u8>().ok()?, indices[1].parse::<u8>().ok()?))
-            })();
-
-            if let Some((character, sprite)) = result {
-                let path = path.join(format!("{:02}/{:02}.png", character, sprite));
-                let mut file = std::fs::File::open(&path)?;
-                let mut data = Vec::new();
-                Tga::from_png(&mut file, &mut data)?;
-
-                println!("injecting {}", path.display());
-                wad.inject_file(&wad_path, &data)?;
-            }
-        }
-    }
-
-    Ok(())
+    let _files = &files;
+    let _path = &path;
+    unimplemented!()
 }
