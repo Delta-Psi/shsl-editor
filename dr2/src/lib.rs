@@ -24,5 +24,10 @@ mod errors {
     }
 }
 
+pub fn decode_utf16(data: &[u8]) -> String {
+    let (string, _, _) = encoding_rs::UTF_16LE.decode(data);
+    string.trim_end_matches('\0').to_string()
+}
+
 #[cfg(test)]
 mod tests;

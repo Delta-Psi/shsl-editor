@@ -16,8 +16,8 @@ pub fn extract(files: &GameFiles, path: &Path) -> Result<()> {
 
         let mut names = toml::map::Map::with_capacity(pak.entries.len());
         for (i, entry) in pak.entries.iter().enumerate() {
-            let (name, _, _) = encoding_rs::UTF_16LE.decode(entry);
-            names.insert(format!("{:02}", i), toml::Value::String(name.to_string()));
+            let name = crate::decode_utf16(entry);
+            names.insert(format!("{:02}", i), toml::Value::String(name));
         }
 
         let file = toml::to_string_pretty(&names)?;

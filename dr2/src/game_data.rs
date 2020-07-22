@@ -79,10 +79,12 @@ pub enum WadRef {
 
 pub mod music;
 pub mod dialogue;
+pub mod report_card;
 
 pub fn extract<P: AsRef<Path>>(files: &GameFiles, path: P) -> Result<()> {
     let path = path.as_ref();
 
+    report_card::extract(files, path)?;
     dialogue::extract(files, path)?;
     music::extract(files, path)?;
 
