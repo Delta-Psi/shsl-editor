@@ -64,15 +64,14 @@ pub fn extract(files: &GameFiles, path: &Path) -> Result<()> {
                 wad.read_file(&wad_path, &mut data)?;
 
                 let image = Tga::from_bytes(&data)?;
-                let mut png = std::io::Cursor::new(Vec::new());
-                image.to_png(&mut png)?;
 
                 let path = path.join(format!("{:02}", character));
                 std::fs::create_dir_all(&path)?;
                 let path = path.join(format!("{:02}.png", sprite));
 
                 println!("writing {}", path.display());
-                std::fs::write(path, &png.into_inner())?;
+                let mut file = std::fs::File::create(path)?;
+                image.to_png(&mut file)?;
             }
         }
     }

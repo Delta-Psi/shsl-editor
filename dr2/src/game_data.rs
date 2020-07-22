@@ -83,6 +83,7 @@ pub mod report_card;
 
 pub fn extract<P: AsRef<Path>>(files: &GameFiles, path: P) -> Result<()> {
     let path = path.as_ref();
+    std::fs::create_dir_all(&path)?;
 
     report_card::extract(files, path)?;
     dialogue::extract(files, path)?;

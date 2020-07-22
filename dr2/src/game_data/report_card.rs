@@ -1,6 +1,7 @@
 use super::*;
 use std::collections::BTreeMap;
 use crate::formats::pak::Pak;
+use crate::formats::tga::{Tga, TgaExt};
 use serde::Serialize;
 
 pub const STUDENT_COUNT: usize = 16;
@@ -69,6 +70,23 @@ pub fn extract(files: &GameFiles, path: &Path) -> Result<()> {
 
         println!("writing {}", path.display());
         std::fs::write(path, toml::to_string_pretty(&report_cards)?.as_bytes())?;
+    }
+
+    let path = path.join("report_card");
+    {
+        let path = path.join("pictures");
+        std::fs::create_dir_all(&path)?;
+        for i in 0..STUDENT_COUNT {
+            let mut buf = Vec::new();
+            files.dr2_data.wad.read_file(&format!("Dr2/data/all/cg/report/tsushimbo_chara_{:03}.tga", i), &mut buf)?;
+
+            let image = Tga::from_bytes(&buf)?;
+
+            let path = path.join(format!("{:02}.png", i));
+            println!("writing {}", path.display());
+            let mut file = std::fs::File::create(path)?;
+            image.to_png(&mut file)?;
+        }
     }
 
     Ok(())
