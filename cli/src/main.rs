@@ -16,6 +16,16 @@ fn main() {
             .arg(Arg::with_name("OUTDIR")
                 .help("output directory")
                 .required(true)))
+        .subcommand(SubCommand::with_name("inject")
+            .arg(Arg::with_name("DR2_DATA")
+                .help("path to dr2_data.wad")
+                .required(true))
+            .arg(Arg::with_name("DR2_DATA_US")
+                .help("path to dr2_data_us.wad")
+                .required(true))
+            .arg(Arg::with_name("INDIR")
+                .help("input directory")
+                .required(true)))
 
         .subcommand(SubCommand::with_name("wad-list")
             .about("Lists all files present in a WAD file")
@@ -67,6 +77,14 @@ fn main() {
                 let outdir = matches.value_of("OUTDIR").unwrap();
 
                 extract(dr2_data_path, dr2_data_us_path, outdir);
+            }
+
+            "inject" => {
+                let dr2_data_path = matches.value_of("DR2_DATA").unwrap();
+                let dr2_data_us_path = matches.value_of("DR2_DATA_US").unwrap();
+                let indir = matches.value_of("INDIR").unwrap();
+
+                inject(dr2_data_path, dr2_data_us_path, indir);
             }
 
             "wad-list" => {
@@ -163,4 +181,11 @@ pub fn extract(dr2_data_path: &str, dr2_data_us_path: &str, outdir: &str) {
 
     let game_files = game_data::GameFiles::new(dr2_data_path, dr2_data_us_path).unwrap();
     game_data::GameData::extract(&game_files, outdir).unwrap();
+}
+
+pub fn inject(dr2_data_path: &str, dr2_data_us_path: &str, indir: &str) {
+    use dr2::game_data::{self, Data};
+
+    let mut game_files = game_data::GameFiles::new(dr2_data_path, dr2_data_us_path).unwrap();
+    game_data::GameData::inject(&mut game_files, indir).unwrap();
 }

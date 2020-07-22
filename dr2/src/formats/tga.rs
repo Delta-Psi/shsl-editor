@@ -100,8 +100,6 @@ impl<'a> TgaExt<'a> for Tga<'a> {
     }
 
     fn from_png<R: Read>(reader: R, buf: &mut Vec<u8>) -> Result<()> {
-        const HEADER_SIZE: usize = 18;
-
         let mut decoder = png::Decoder::new(reader);
         decoder.set_transformations(png::Transformations::IDENTITY);
         let (info, mut reader) = decoder.read_info()?;
@@ -124,7 +122,7 @@ impl<'a> TgaExt<'a> for Tga<'a> {
         if info.color_type == png::ColorType::Indexed {
             writer.write_u8(1)?; // color map type: present
             writer.write_u8(1)?; // image type: colormapped
-            writer.write_u16::<LE>(HEADER_SIZE as u16)?; // color map offset
+            writer.write_u16::<LE>(0)?; // color map offset
 
             let palette = info.palette.as_ref().unwrap();
             let color_map_len = palette.len()/3;

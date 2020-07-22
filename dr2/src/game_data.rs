@@ -60,8 +60,8 @@ impl GameFiles {
 
 pub trait Data: Sized {
     fn extract<P: AsRef<Path>>(files: &GameFiles, path: P) -> Result<()>;
+    fn inject<P: AsRef<Path>>(files: &mut GameFiles, path: P) -> Result<()>;
     //fn load(path: &Path) -> Result<Self>;
-    //fn inject(&self, files: &mut GameFiles) -> Result<()>;
 }
 
 /*
@@ -83,6 +83,14 @@ impl Data for GameData {
         let path = path.as_ref();
 
         sprites::Sprites::extract(files, path.join("sprites"))?;
+
+        Ok(())
+    }
+
+    fn inject<P: AsRef<Path>>(files: &mut GameFiles, path: P) -> Result<()> {
+        let path = path.as_ref();
+
+        sprites::Sprites::inject(files, path.join("sprites"))?;
 
         Ok(())
     }

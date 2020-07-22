@@ -41,4 +41,32 @@ impl Data for Sprites {
 
         Ok(())
     }
+
+    fn inject<P: AsRef<Path>>(files: &mut GameFiles, path: P) -> Result<()> {
+        let path = path.as_ref();
+        let wad = &mut files.dr2_data.wad;
+
+        for wad_path in wad.list_dir("Dr2/data/all/cg", true)? {
+            // search for files matching `bustup_16_19.tga`
+            let result = (|| {
+                let string = wad_path.strip_prefix("Dr2/data/all/cg/bustup_")?;
+                let string = string.strip_suffix(".tga")?;
+                let indices: Vec<_> = string.splitn(2, "_").collect();
+
+                Some((indices[0].parse::<u8>().ok()?, indices[1].parse::<u8>().ok()?))
+            })();
+            
+            if let Some((character, sprite)) = result {
+                let path = path.join(format!("{:02}/{:02}.png", character, sprite));
+                let mut file = std::fs::File::open(&path)?;
+                let mut data = Vec::new();
+                Tga::from_png(&mut file, &mut data)?;
+
+                println!("injecting {}", path.display());
+                wad.inject_file(&wad_path, &data)?;
+            }
+        }
+
+        Ok(())
+    }
 }
