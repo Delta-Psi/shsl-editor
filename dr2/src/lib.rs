@@ -8,7 +8,7 @@ mod errors {
         foreign_links {
             Io(std::io::Error);
             InvalidString(std::string::FromUtf8Error);
-            PngEncoding(png::EncodingError);
+            PngDecoding(png::DecodingError);
         }
 
         errors {

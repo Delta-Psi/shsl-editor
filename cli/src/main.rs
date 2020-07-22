@@ -47,10 +47,13 @@ fn main() {
 
         .subcommand(SubCommand::with_name("tga-to-png")
             .arg(Arg::with_name("INPUT")
-                .help("WAD file")
                 .required(true))
             .arg(Arg::with_name("OUTPUT")
-                .help("output directory")
+                .required(true)))
+        .subcommand(SubCommand::with_name("png-to-tga")
+            .arg(Arg::with_name("INPUT")
+                .required(true))
+            .arg(Arg::with_name("OUTPUT")
                 .required(true)))
         .about("SDR2 PC modding tool");
 
@@ -132,6 +135,22 @@ fn main() {
 
                 let mut output = File::create(&output_path).expect("count not create output");
                 image.to_png(&mut output).expect("could not write png");
+            },
+
+            "png-to-tga" => {
+                use std::fs::File;
+                use dr2::formats::tga::{Tga, TgaExt};
+
+                let input_path = matches.value_of("INPUT").unwrap();
+                let output_path = matches.value_of("OUTPUT").unwrap();
+
+                let mut input = File::open(&input_path).expect("could not open input");
+                let mut data = Vec::new();
+                Tga::from_png(&mut input, &mut data).expect("could not convert to png");
+
+                Tga::from_bytes(&mut data).expect("invalid tga generated");
+
+                std::fs::write(output_path, &data).expect("could not write output");
             },
 
             _ => unreachable!(),
