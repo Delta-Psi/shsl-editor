@@ -166,7 +166,7 @@ fn main() {
                 let mut data = Vec::new();
                 Tga::from_png(&mut input, &mut data).expect("could not convert to png");
 
-                Tga::from_bytes(&mut data).expect("invalid tga generated");
+                Tga::from_bytes(&data).expect("invalid tga generated");
 
                 std::fs::write(output_path, &data).expect("could not write output");
             },

@@ -16,7 +16,7 @@ impl Data for Sprites {
             let result = (|| {
                 let string = wad_path.strip_prefix("Dr2/data/all/cg/bustup_")?;
                 let string = string.strip_suffix(".tga")?;
-                let indices: Vec<_> = string.splitn(2, "_").collect();
+                let indices: Vec<_> = string.splitn(2, '_').collect();
 
                 Some((indices[0].parse::<u8>().ok()?, indices[1].parse::<u8>().ok()?))
             })();
@@ -51,7 +51,7 @@ impl Data for Sprites {
             let result = (|| {
                 let string = wad_path.strip_prefix("Dr2/data/all/cg/bustup_")?;
                 let string = string.strip_suffix(".tga")?;
-                let indices: Vec<_> = string.splitn(2, "_").collect();
+                let indices: Vec<_> = string.splitn(2, '_').collect();
 
                 Some((indices[0].parse::<u8>().ok()?, indices[1].parse::<u8>().ok()?))
             })();

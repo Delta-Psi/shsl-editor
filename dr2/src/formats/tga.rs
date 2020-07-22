@@ -51,7 +51,7 @@ impl<'a> TgaExt<'a> for Tga<'a> {
                         for i in 0..self.header.color_map_len as usize {
                             plte.push(color_map[4*i+2]);
                             plte.push(color_map[4*i+1]);
-                            plte.push(color_map[4*i+0]);
+                            plte.push(color_map[4*i  ]);
                             trns.push(color_map[4*i+3]);
                         }
 
@@ -140,7 +140,7 @@ impl<'a> TgaExt<'a> for Tga<'a> {
                 for i in 0..color_map_len {
                     buf.push(palette[3*i+2]);
                     buf.push(palette[3*i+1]);
-                    buf.push(palette[3*i+0]);
+                    buf.push(palette[3*i  ]);
                     buf.push(trns[i]);
                 }
 
@@ -154,7 +154,7 @@ impl<'a> TgaExt<'a> for Tga<'a> {
                 for i in 0..color_map_len {
                     buf.push(palette[3*i+2]);
                     buf.push(palette[3*i+1]);
-                    buf.push(palette[3*i+0]);
+                    buf.push(palette[3*i  ]);
                 }
 
                 color_map = Some(buf);
