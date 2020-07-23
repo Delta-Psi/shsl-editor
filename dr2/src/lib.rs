@@ -21,6 +21,8 @@ mod errors {
             InvalidPakIndices
 
             TgaDecoding
+
+            Utf16Encoding
         }
     }
 }
@@ -28,6 +30,21 @@ mod errors {
 pub fn decode_utf16(data: &[u8]) -> String {
     let (string, _, _) = encoding_rs::UTF_16LE.decode(data);
     string.trim_end_matches('\0').to_string()
+}
+
+pub fn encode_utf16(string: &str) -> Vec<u8> {
+    use byteorder::{WriteBytesExt, LE};
+
+    let mut buf = std::io::Cursor::new(Vec::new());
+    buf.write_u8(0xff).unwrap();
+    buf.write_u8(0xfe).unwrap();
+
+    for v in string.encode_utf16() {
+        buf.write_u16::<LE>(v).unwrap();
+    }
+
+    buf.write_u16::<LE>(0).unwrap();
+    buf.into_inner()
 }
 
 #[cfg(test)]

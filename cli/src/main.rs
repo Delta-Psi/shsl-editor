@@ -220,6 +220,7 @@ pub fn extract(dr2_data_path: &str, dr2_data_us_path: &str, outdir: &str) {
 pub fn inject(dr2_data_path: &str, dr2_data_us_path: &str, indir: &str) {
     use dr2::game_data;
 
+    let mut project = game_data::Project::open(indir).unwrap();
     let mut game_files = game_data::GameFiles::new(dr2_data_path, dr2_data_us_path).unwrap();
-    game_data::inject(&mut game_files, indir).unwrap();
+    game_data::inject(&mut project, &mut game_files).unwrap();
 }

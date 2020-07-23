@@ -112,6 +112,28 @@ impl Project {
         self.write_file(path, &string.as_bytes())
     }
 
+    /// Only executes the closure if the file has been edited.
+    pub fn open_file<P: AsRef<RelativePath>, F: FnOnce(&[u8]) -> Result<()>>(&mut self, path: P, func: F) -> Result<()> {
+        let path = path.as_ref();
+        let full_path = path.to_path(&self.base_path);
+        let modified = std::fs::metadata(&full_path)?.modified()?;
+        
+        if let Some(prev) = self.sync.get(path) {
+            if *prev < modified {
+                info!("reading {}", full_path.display());
+                let data = std::fs::read(&full_path)?;
+                func(&data)?;
+
+                self.sync.insert(path.to_owned(), modified);
+                self.update_sync_file()?;
+            }
+        } else {
+            unreachable!("file to be opened not in sync file");
+        }
+
+        Ok(())
+    }
+
     fn update_sync_file(&self) -> Result<()> {
         let string = toml::to_string_pretty(&self.sync)?;
         std::fs::write(&self.sync_path, &string.as_bytes())?;
@@ -132,12 +154,10 @@ pub fn extract(project: &mut Project, files: &GameFiles) -> Result<()> {
     Ok(())
 }
 
-pub fn inject<P: AsRef<Path>>(files: &mut GameFiles, path: P) -> Result<()> {
-    let path = path.as_ref();
-    let _files = &files;
-
-    dialogue::inject(files, &path.join("dialogue"))?;
-    //music::inject(files, &path.join("music"))?;
+pub fn inject(project: &mut Project, files: &mut GameFiles) -> Result<()> {
+    report_card::inject(project, files)?;
+    //dialogue::inject(project, files)?;
+    //music::inject(project, files)?;
 
     Ok(())
 }

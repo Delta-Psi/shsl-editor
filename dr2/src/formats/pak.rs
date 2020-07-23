@@ -1,6 +1,7 @@
 use std::io::prelude::*;
 use std::io::{BufReader, Cursor};
-use byteorder::{ReadBytesExt, LittleEndian as LE};
+use std::borrow::Cow;
+use byteorder::{ReadBytesExt, WriteBytesExt, LE};
 
 use crate::errors::*;
 use error_chain::bail;
@@ -34,7 +35,7 @@ impl Header {
 }
 
 pub struct Pak<'a> {
-    pub entries: Box<[&'a [u8]]>,
+    pub entries: Box<[Cow<'a, [u8]>]>,
 }
 
 impl<'a> Pak<'a> {
@@ -61,5 +62,22 @@ impl<'a> Pak<'a> {
         Ok(Pak {
             entries: entries.into_boxed_slice(),
         })
+    }
+
+    pub fn repack(&self) -> Result<Vec<u8>> {
+        let mut buf = std::io::Cursor::new(Vec::new());
+
+        buf.write_u32::<LE>(self.entries.len() as u32)?;
+        let mut offset: usize = 4 + self.entries.len()*4;
+        for entry in self.entries.iter() {
+            buf.write_u32::<LE>(offset as u32)?;
+            offset += entry.len();
+        }
+
+        for entry in self.entries.iter() {
+            buf.write(&entry)?;
+        }
+
+        Ok(buf.into_inner())
     }
 }
