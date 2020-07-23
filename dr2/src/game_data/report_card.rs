@@ -3,7 +3,6 @@ use std::collections::BTreeMap;
 use crate::formats::pak::Pak;
 use crate::formats::tga::{Tga, TgaExt};
 use serde::Serialize;
-use log::info;
 
 pub const STUDENT_COUNT: usize = 16;
 
@@ -23,10 +22,8 @@ pub struct ReportCard {
     pub fte_summaries: Option<[String; 5]>,
 }
 
-pub fn extract(files: &GameFiles, path: &Path) -> Result<()> {
+pub fn extract(project: &mut Project, files: &GameFiles) -> Result<()> {
     {
-        let path = path.join("report_card.toml");
-
         let mut buf = Vec::new();
         files.dr2_data_us.read_file("Dr2/data/us/bin/bin_progress_font_l.pak", &mut buf)?;
         let pak = Pak::from_bytes(&buf)?;
@@ -69,25 +66,18 @@ pub fn extract(files: &GameFiles, path: &Path) -> Result<()> {
             });
         }
 
-        info!("writing {}", path.display());
-        std::fs::write(path, toml::to_string_pretty(&report_cards)?.as_bytes())?;
+        project.write_toml("report_card.toml", &report_cards)?;
     }
 
-    let path = path.join("report_card");
-    {
-        let path = path.join("pictures");
-        std::fs::create_dir_all(&path)?;
-        for i in 0..STUDENT_COUNT {
-            let mut buf = Vec::new();
-            files.dr2_data.read_file(&format!("Dr2/data/all/cg/report/tsushimbo_chara_{:03}.tga", i), &mut buf)?;
+    for i in 0..STUDENT_COUNT {
+        let mut buf = Vec::new();
+        files.dr2_data.read_file(&format!("Dr2/data/all/cg/report/tsushimbo_chara_{:03}.tga", i), &mut buf)?;
 
-            let image = Tga::from_bytes(&buf)?;
+        let image = Tga::from_bytes(&buf)?;
+        let mut png = std::io::Cursor::new(Vec::new());
+        image.to_png(&mut png)?;
 
-            let path = path.join(format!("{:02}.png", i));
-            info!("writing {}", path.display());
-            let mut file = std::fs::File::create(path)?;
-            image.to_png(&mut file)?;
-        }
+        project.write_file(format!("report_card/{:02}.png", i), &png.into_inner())?;
     }
 
     Ok(())

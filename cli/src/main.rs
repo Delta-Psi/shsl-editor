@@ -212,8 +212,9 @@ fn main() {
 pub fn extract(dr2_data_path: &str, dr2_data_us_path: &str, outdir: &str) {
     use dr2::game_data;
 
+    let mut project = game_data::Project::create(outdir, Default::default()).unwrap();
     let game_files = game_data::GameFiles::new(dr2_data_path, dr2_data_us_path).unwrap();
-    game_data::extract(&game_files, outdir).unwrap();
+    game_data::extract(&mut project, &game_files).unwrap();
 }
 
 pub fn inject(dr2_data_path: &str, dr2_data_us_path: &str, indir: &str) {
