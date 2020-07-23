@@ -29,35 +29,5 @@ pub fn decode_utf16(data: &[u8]) -> String {
     string.trim_end_matches('\0').to_string()
 }
 
-/// Allows rust sequential containers to be serialized and
-/// deserialized as maps with keys as zero-padded indices.
-///
-/// The second field of this struct is the padding width.
-pub struct Table<T>(pub T, pub usize);
-
-impl<T> Table<T> {
-    pub fn into_inner(self) -> T {
-        self.0
-    }
-}
-
-impl<I: serde::Serialize> serde::Serialize for Table<&[I]> {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where S: serde::Serializer,
-    {
-        use serde::ser::SerializeMap;
-
-        let inner = &self.0;
-        let mut map = serializer.serialize_map(Some(inner.len()))?;
-        for (i, e) in inner.iter().enumerate() {
-            map.serialize_entry(
-                &format!("{:01$}", i, self.1),
-                e,
-            )?;
-        }
-        map.end()
-    }
-}
-
 #[cfg(test)]
 mod tests;
