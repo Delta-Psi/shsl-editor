@@ -15,3 +15,4 @@ toml = "0.5.6"
 mtpng = "0.3.4"
 encoding_rs = "0.8.23"
 serde = { version = "1.0.114", features = ["derive"] }
+log = "0.4.11"

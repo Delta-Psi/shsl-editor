@@ -1,6 +1,7 @@
 use super::*;
 use crate::formats::tga::{Tga, TgaExt};
 use crate::formats::pak::Pak;
+use log::info;
 
 pub fn extract(files: &GameFiles, path: &Path) -> Result<()> {
     let path = path.join("dialogue");
@@ -21,7 +22,7 @@ pub fn extract(files: &GameFiles, path: &Path) -> Result<()> {
         }
 
         let file = toml::to_string_pretty(&names)?;
-        println!("writing {}", path.display());
+        info!("writing {}", path.display());
         std::fs::write(path, file.as_bytes())?;
     }
 
@@ -39,7 +40,7 @@ pub fn extract(files: &GameFiles, path: &Path) -> Result<()> {
             image.to_png(&mut png)?;
 
             let path = path.join(format!("{:02}.png", i));
-            println!("writing {}", path.display());
+            info!("writing {}", path.display());
             std::fs::write(path, &png.into_inner())?;
         }
     }
@@ -69,7 +70,7 @@ pub fn extract(files: &GameFiles, path: &Path) -> Result<()> {
                 std::fs::create_dir_all(&path)?;
                 let path = path.join(format!("{:02}.png", sprite));
 
-                println!("writing {}", path.display());
+                info!("writing {}", path.display());
                 let mut file = std::fs::File::create(path)?;
                 image.to_png(&mut file)?;
             }

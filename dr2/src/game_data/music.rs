@@ -2,6 +2,7 @@ use super::*;
 use std::collections::BTreeMap;
 use serde::Serialize;
 use byteorder::{ByteOrder, LE};
+use log::info;
 
 pub const SAMPLE_RATE: f32 = 44100.0;
 pub const TRACK_COUNT: usize = 102;
@@ -37,7 +38,7 @@ pub fn extract(files: &GameFiles, path: &Path) -> Result<()> {
 
             if is_ogg {
                 let path = music_path.join(format!("{:02}.ogg", index));
-                println!("writing {}", path.display());
+                info!("writing {}", path.display());
                 std::fs::write(path, &data)?;
             } else {
                 let begin = LE::read_u32(&data[4..8]);
@@ -54,7 +55,7 @@ pub fn extract(files: &GameFiles, path: &Path) -> Result<()> {
     {
         let path = path.join("music.toml");
         let metadata = toml::to_string_pretty(&metadata)?;
-        println!("writing {}", path.display());
+        info!("writing {}", path.display());
         std::fs::write(path, metadata.as_bytes())?;
     }
 

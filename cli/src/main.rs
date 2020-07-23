@@ -3,6 +3,8 @@
 pub const VERSION: &'static str = "0.1.0";
 
 fn main() {
+    pretty_env_logger::init();
+
     use clap::{App, SubCommand, Arg};
 
     let app = App::new("SHSL Editor CLI")

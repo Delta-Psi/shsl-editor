@@ -3,6 +3,7 @@ use std::collections::BTreeMap;
 use crate::formats::pak::Pak;
 use crate::formats::tga::{Tga, TgaExt};
 use serde::Serialize;
+use log::info;
 
 pub const STUDENT_COUNT: usize = 16;
 
@@ -68,7 +69,7 @@ pub fn extract(files: &GameFiles, path: &Path) -> Result<()> {
             });
         }
 
-        println!("writing {}", path.display());
+        info!("writing {}", path.display());
         std::fs::write(path, toml::to_string_pretty(&report_cards)?.as_bytes())?;
     }
 
@@ -83,7 +84,7 @@ pub fn extract(files: &GameFiles, path: &Path) -> Result<()> {
             let image = Tga::from_bytes(&buf)?;
 
             let path = path.join(format!("{:02}.png", i));
-            println!("writing {}", path.display());
+            info!("writing {}", path.display());
             let mut file = std::fs::File::create(path)?;
             image.to_png(&mut file)?;
         }
