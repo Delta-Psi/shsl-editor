@@ -1,5 +1,4 @@
 use super::*;
-use std::collections::BTreeMap;
 use serde::Serialize;
 use byteorder::{ByteOrder, LE};
 use log::info;
@@ -9,16 +8,14 @@ pub const TRACK_COUNT: usize = 102;
 
 #[derive(Serialize)]
 pub struct Track {
-    pub path: PathBuf,
-    pub loop_points: Option<(f32, f32)>,
+    pub loop_begin: f32,
+    pub loop_end: f32,
 }
 
 pub fn extract(files: &GameFiles, path: &Path) -> Result<()> {
     let music_path = path.join("music");
     std::fs::create_dir_all(&music_path)?;
     let wad = &files.dr2_data.wad;
-
-    let mut metadata = BTreeMap::new();
 
     for wad_path in wad.list_dir("Dr2/data/all/bgm", true)? {
         let result = (|| {
@@ -41,22 +38,17 @@ pub fn extract(files: &GameFiles, path: &Path) -> Result<()> {
                 info!("writing {}", path.display());
                 std::fs::write(path, &data)?;
             } else {
-                let begin = LE::read_u32(&data[4..8]);
-                let end = LE::read_u32(&data[8..12]);
+                let loop_begin = LE::read_u32(&data[4..8]) as f32 / SAMPLE_RATE;
+                let loop_end = LE::read_u32(&data[8..12]) as f32 / SAMPLE_RATE;
 
-                metadata.insert(format!("{:02}", index), Track {
-                    loop_begin: begin as f32 / SAMPLE_RATE,
-                    loop_end: end as f32 / SAMPLE_RATE,
-                });
+                let path = music_path.join(format!("{:02}.toml", index));
+                info!("writing {}", path.display());
+                std::fs::write(path, toml::to_string_pretty(&Track {
+                    loop_begin,
+                    loop_end,
+                })?.as_bytes())?;
             }
         }
-    }
-
-    {
-        let path = path.join("music.toml");
-        let metadata = toml::to_string_pretty(&metadata)?;
-        info!("writing {}", path.display());
-        std::fs::write(path, metadata.as_bytes())?;
     }
 
     Ok(())
