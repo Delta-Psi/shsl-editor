@@ -1,7 +1,6 @@
 use super::*;
 use serde::Serialize;
 use byteorder::{ByteOrder, LE};
-use log::info;
 
 pub const SAMPLE_RATE: f32 = 44100.0;
 pub const TRACK_COUNT: usize = 102;
@@ -12,9 +11,7 @@ pub struct Track {
     pub loop_end: f32,
 }
 
-pub fn extract(files: &GameFiles, path: &Path) -> Result<()> {
-    let music_path = path.join("music");
-    std::fs::create_dir_all(&music_path)?;
+pub fn extract(project: &mut Project, files: &GameFiles) -> Result<()> {
     let wad = &files.dr2_data;
 
     for wad_path in wad.list_dir("Dr2/data/all/bgm", true)? {
@@ -34,19 +31,15 @@ pub fn extract(files: &GameFiles, path: &Path) -> Result<()> {
             wad.read_file(&wad_path, &mut data)?;
 
             if is_ogg {
-                let path = music_path.join(format!("{:02}.ogg", index));
-                info!("writing {}", path.display());
-                std::fs::write(path, &data)?;
+                project.write_file(format!("music/{:03}.ogg", index), &data)?;
             } else {
                 let loop_begin = LE::read_u32(&data[4..8]) as f32 / SAMPLE_RATE;
                 let loop_end = LE::read_u32(&data[8..12]) as f32 / SAMPLE_RATE;
 
-                let path = music_path.join(format!("{:02}.toml", index));
-                info!("writing {}", path.display());
-                std::fs::write(path, toml::to_string_pretty(&Track {
+                project.write_toml(format!("music/{:03}.toml", index), &Track {
                     loop_begin,
                     loop_end,
-                })?.as_bytes())?;
+                })?;
             }
         }
     }
