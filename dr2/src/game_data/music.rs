@@ -15,7 +15,7 @@ pub struct Track {
 pub fn extract(files: &GameFiles, path: &Path) -> Result<()> {
     let music_path = path.join("music");
     std::fs::create_dir_all(&music_path)?;
-    let wad = &files.dr2_data.wad;
+    let wad = &files.dr2_data;
 
     for wad_path in wad.list_dir("Dr2/data/all/bgm", true)? {
         let result = (|| {

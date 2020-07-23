@@ -11,7 +11,7 @@ pub fn extract(files: &GameFiles, path: &Path) -> Result<()> {
     {
         let path = path.join("names.toml");
         let mut buf = Vec::new();
-        files.dr2_data_us.wad.read_file("Dr2/data/us/bin/bin_progress_font_l.pak", &mut buf)?;
+        files.dr2_data_us.read_file("Dr2/data/us/bin/bin_progress_font_l.pak", &mut buf)?;
         let pak = Pak::from_bytes(&buf)?;
         let pak = Pak::from_bytes(&pak.entries[18])?;
 
@@ -31,7 +31,7 @@ pub fn extract(files: &GameFiles, path: &Path) -> Result<()> {
         let path = path.join("names");
         std::fs::create_dir_all(&path)?;
         let mut buf = Vec::new();
-        files.dr2_data_us.wad.read_file("Dr2/data/us/cg/chara_name.pak", &mut buf)?;
+        files.dr2_data_us.read_file("Dr2/data/us/cg/chara_name.pak", &mut buf)?;
         let pak = Pak::from_bytes(&buf)?;
 
         for (i, entry) in pak.entries.iter().enumerate() {
@@ -48,7 +48,7 @@ pub fn extract(files: &GameFiles, path: &Path) -> Result<()> {
     // SPRITES
     {
         let path = path.join("sprites");
-        let wad = &files.dr2_data.wad;
+        let wad = &files.dr2_data;
 
         for wad_path in wad.list_dir("Dr2/data/all/cg", true)? {
             // search for files matching `bustup_16_19.tga`

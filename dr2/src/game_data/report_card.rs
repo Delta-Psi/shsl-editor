@@ -28,7 +28,7 @@ pub fn extract(files: &GameFiles, path: &Path) -> Result<()> {
         let path = path.join("report_card.toml");
 
         let mut buf = Vec::new();
-        files.dr2_data_us.wad.read_file("Dr2/data/us/bin/bin_progress_font_l.pak", &mut buf)?;
+        files.dr2_data_us.read_file("Dr2/data/us/bin/bin_progress_font_l.pak", &mut buf)?;
         let pak = Pak::from_bytes(&buf)?;
 
         let e8 = Pak::from_bytes(&pak.entries[8])?;
@@ -79,7 +79,7 @@ pub fn extract(files: &GameFiles, path: &Path) -> Result<()> {
         std::fs::create_dir_all(&path)?;
         for i in 0..STUDENT_COUNT {
             let mut buf = Vec::new();
-            files.dr2_data.wad.read_file(&format!("Dr2/data/all/cg/report/tsushimbo_chara_{:03}.tga", i), &mut buf)?;
+            files.dr2_data.read_file(&format!("Dr2/data/all/cg/report/tsushimbo_chara_{:03}.tga", i), &mut buf)?;
 
             let image = Tga::from_bytes(&buf)?;
 
