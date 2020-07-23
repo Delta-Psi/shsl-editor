@@ -9,8 +9,8 @@ pub const TRACK_COUNT: usize = 102;
 
 #[derive(Serialize)]
 pub struct Track {
-    pub loop_begin: f32,
-    pub loop_end: f32,
+    pub path: PathBuf,
+    pub loop_points: Option<(f32, f32)>,
 }
 
 pub fn extract(files: &GameFiles, path: &Path) -> Result<()> {
