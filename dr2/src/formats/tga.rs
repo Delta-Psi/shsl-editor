@@ -20,15 +20,13 @@ impl<'a> TgaExt<'a> for Tga<'a> {
     }
 
     fn to_png<W: Write>(&self, writer: W) -> Result<()> {
-        let mut encoder = mtpng::encoder::Encoder::new(writer, &mtpng::encoder::Options::new());
-        let mut header = mtpng::Header::new();
-        header.set_size(self.width() as u32, self.height() as u32)?;
+        let mut encoder = png::Encoder::new(writer, self.width() as u32, self.height() as u32);
         let mut pixel_data = self.pixel_data.to_vec();
 
         match self.header.image_type {
             ImageType::ColorMapped => {
-                header.set_color(mtpng::ColorType::IndexedColor, self.header.pixel_depth)?;
-                encoder.write_header(&header)?;
+                encoder.set_color(png::ColorType::Indexed);
+                encoder.set_depth(png::BitDepth::Eight);
 
                 let color_map = self.color_map.unwrap();
 
@@ -41,7 +39,7 @@ impl<'a> TgaExt<'a> for Tga<'a> {
                             plte.swap(3*i, 3*i+2);
                         }
 
-                        encoder.write_palette(&plte)?;
+                        encoder.set_palette(plte);
                     },
                     32 => {
                         // split the color map into PLTE (color) and tRNS (alpha) chunks
@@ -55,8 +53,8 @@ impl<'a> TgaExt<'a> for Tga<'a> {
                             trns.push(color_map[4*i+3]);
                         }
 
-                        encoder.write_palette(&plte)?;
-                        encoder.write_transparency(&trns)?;
+                        encoder.set_palette(plte);
+                        encoder.set_trns(trns);
                     },
 
                     _ => unimplemented!(),
@@ -93,8 +91,8 @@ impl<'a> TgaExt<'a> for Tga<'a> {
             _ => unimplemented!(),
         }
 
-        encoder.write_image_rows(&pixel_data[0..w*h*(self.header.pixel_depth/8) as usize])?;
-        encoder.finish()?;
+        let mut writer = encoder.write_header()?;
+        writer.write_image_data(&pixel_data[0..w*h*(self.header.pixel_depth/8) as usize])?;
 
         Ok(())
     }

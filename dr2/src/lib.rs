@@ -10,6 +10,7 @@ pub mod errors {
             InvalidUtf8String(std::string::FromUtf8Error);
             InvalidUtf16String(std::string::FromUtf16Error);
             PngDecoding(png::DecodingError);
+            PngEncoding(png::EncodingError);
             TomlSerialize(toml::ser::Error);
             TomlDeserialize(toml::de::Error);
         }
