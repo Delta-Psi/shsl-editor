@@ -1,9 +1,17 @@
 use crate::errors::*;
-use byteorder::{ByteOrder, LE};
+use byteorder::{ByteOrder, LE, BE};
 
 #[derive(Debug)]
 pub enum Instr {
     TextCount(u16),
+    Text(u16),
+    Format(u8),
+
+    EndOfJump(u16),
+    StartOfJump(u16),
+
+    WaitForInput,
+    WaitFrame,
 
     Unknown(u8, Vec<u8>),
 }
@@ -20,6 +28,14 @@ impl Instr {
 
         Ok(Some( match data[1] {
             0x00 => (TextCount(LE::read_u16(&data[2..4])), 4),
+            0x02 => (Text(BE::read_u16(&data[2..4])), 4),
+            0x03 => (Format(data[2]), 3),
+
+            0x2c => (EndOfJump(BE::read_u16(&data[2..4])), 4),
+            0x3b => (StartOfJump(BE::read_u16(&data[2..4])), 4),
+
+            0x4b => (WaitForInput, 2),
+            0x4c => (WaitFrame, 2),
 
             _ => {
                 match data[2..].iter().enumerate().find(|(_, v)| **v == 0x70) {
