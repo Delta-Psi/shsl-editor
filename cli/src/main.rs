@@ -13,22 +13,16 @@ fn main() {
         .author("Delta-Psi")
         //.setting(AppSettings::SubcommandRequiredElseHelp)
         .subcommand(SubCommand::with_name("extract")
-            .about("Extracts the game data from dr2_data.wad and dr2_data_us.wad into a folder")
-            .arg(Arg::with_name("DR2_DATA")
-                .help("path to dr2_data.wad")
-                .required(true))
-            .arg(Arg::with_name("DR2_DATA_US")
-                .help("path to dr2_data_us.wad")
+            .about("Extracts the game data into a folder")
+            .arg(Arg::with_name("GAME_PATH")
+                .help("path to the game files")
                 .required(true))
             .arg(Arg::with_name("OUTDIR")
                 .help("output directory")
                 .required(true)))
         .subcommand(SubCommand::with_name("inject")
-            .arg(Arg::with_name("DR2_DATA")
-                .help("path to dr2_data.wad")
-                .required(true))
-            .arg(Arg::with_name("DR2_DATA_US")
-                .help("path to dr2_data_us.wad")
+            .arg(Arg::with_name("GAME_PATH")
+                .help("path to the game files")
                 .required(true))
             .arg(Arg::with_name("INDIR")
                 .help("input directory")
@@ -79,19 +73,17 @@ fn main() {
     if let (subcommand, Some(matches)) = matches.subcommand() {
         match subcommand {
             "extract" => {
-                let dr2_data_path = matches.value_of("DR2_DATA").unwrap();
-                let dr2_data_us_path = matches.value_of("DR2_DATA_US").unwrap();
+                let game_path = matches.value_of("GAME_PATH").unwrap();
                 let outdir = matches.value_of("OUTDIR").unwrap();
 
-                extract(dr2_data_path, dr2_data_us_path, outdir).unwrap();
+                extract(game_path, outdir).unwrap();
             }
 
             "inject" => {
-                let dr2_data_path = matches.value_of("DR2_DATA").unwrap();
-                let dr2_data_us_path = matches.value_of("DR2_DATA_US").unwrap();
+                let game_path = matches.value_of("GAME_PATH").unwrap();
                 let indir = matches.value_of("INDIR").unwrap();
 
-                inject(dr2_data_path, dr2_data_us_path, indir).unwrap();
+                inject(game_path, indir).unwrap();
             }
 
             "wad-list" => {
@@ -198,15 +190,10 @@ fn main() {
             println!("invalid mode");
         } else {
             let result: dr2::errors::Result<()> = (|| {
-                print!("Path of dr2_data.wad: ");
+                print!("Path of game data: ");
                 stdout.flush().unwrap();
-                let mut dr2_data_path = String::new();
-                stdin.read_line(&mut dr2_data_path).unwrap();
-
-                print!("Path of dr2_data_us.wad: ");
-                stdout.flush().unwrap();
-                let mut dr2_data_us_path = String::new();
-                stdin.read_line(&mut dr2_data_us_path).unwrap();
+                let mut game_path = String::new();
+                stdin.read_line(&mut game_path).unwrap();
 
                 print!("Project directory: ");
                 stdout.flush().unwrap();
@@ -214,12 +201,10 @@ fn main() {
                 stdin.read_line(&mut projdir).unwrap();
 
                 if choice == "extract" {
-                    extract(dr2_data_path.trim(),
-                    dr2_data_us_path.trim(),
+                    extract(game_path.trim(),
                     projdir.trim())?;
                 } else {
-                    inject(dr2_data_path.trim(),
-                    dr2_data_us_path.trim(),
+                    inject(game_path.trim(),
                     projdir.trim())?;
                 }
 
@@ -235,21 +220,21 @@ fn main() {
     }
 }
 
-pub fn extract(dr2_data_path: &str, dr2_data_us_path: &str, outdir: &str) -> dr2::errors::Result<()> {
+pub fn extract(game_path: &str, outdir: &str) -> dr2::errors::Result<()> {
     use dr2::game_data;
 
     let mut project = game_data::Project::create(outdir, Default::default())?;
-    let game_files = game_data::GameFiles::new(dr2_data_path, dr2_data_us_path)?;
+    let game_files = game_data::GameFiles::load(game_path)?;
     game_data::extract(&mut project, &game_files)?;
 
     Ok(())
 }
 
-pub fn inject(dr2_data_path: &str, dr2_data_us_path: &str, indir: &str) -> dr2::errors::Result<()> {
+pub fn inject(game_path: &str, indir: &str) -> dr2::errors::Result<()> {
     use dr2::game_data;
 
     let mut project = game_data::Project::open(indir)?;
-    let mut game_files = game_data::GameFiles::new(dr2_data_path, dr2_data_us_path)?;
+    let mut game_files = game_data::GameFiles::load(game_path)?;
     game_data::inject(&mut project, &mut game_files)?;
 
     Ok(())

@@ -6,6 +6,7 @@ use crate::formats::tga::{Tga, TgaExt};
 use serde::{Serialize, Deserialize};
 
 pub const STUDENT_COUNT: usize = 16;
+pub const STUDENT_PICTURE_COUNT: usize = 19;
 
 #[derive(Serialize, Deserialize)]
 pub struct ReportCard {
@@ -24,6 +25,7 @@ pub struct ReportCard {
 }
 
 pub fn extract(project: &mut Project, files: &GameFiles) -> Result<()> {
+    // REPORT CARD TEXT
     let mut buf = Vec::new();
     files.dr2_data_us.read_file("Dr2/data/us/bin/bin_progress_font_l.pak", &mut buf)?;
     let pak = Pak::from_bytes(&buf)?;
@@ -65,10 +67,25 @@ pub fn extract(project: &mut Project, files: &GameFiles) -> Result<()> {
             },
         });
     }
-
     project.write_toml("report_card.toml", &report_cards)?;
 
+    // NAME IMAGES
+    buf.clear();
+    files.dr2_data_keyboard_us.read_file("Dr2/data/us/bin/bin_pb_report_l.pak", &mut buf)?;
+
+    let pak = Pak::from_bytes(&buf)?;
+    let e2 = Pak::from_bytes(&pak.entries[2])?;
+
     for i in 0..STUDENT_COUNT {
+        let image = Tga::from_bytes(&e2.entries[20-i])?;
+        let mut png = std::io::Cursor::new(Vec::new());
+        image.to_png(&mut png)?;
+
+        project.write_file(format!("report_card/names/{:02}.png", i), &png.into_inner())?;
+    }
+
+    // PICTURES
+    for i in 0..STUDENT_PICTURE_COUNT {
         let mut buf = Vec::new();
         files.dr2_data.read_file(&format!("Dr2/data/all/cg/report/tsushimbo_chara_{:03}.tga", i), &mut buf)?;
 
@@ -76,7 +93,7 @@ pub fn extract(project: &mut Project, files: &GameFiles) -> Result<()> {
         let mut png = std::io::Cursor::new(Vec::new());
         image.to_png(&mut png)?;
 
-        project.write_file(format!("report_card/{:02}.png", i), &png.into_inner())?;
+        project.write_file(format!("report_card/pictures/{:02}.png", i), &png.into_inner())?;
     }
 
     Ok(())
@@ -94,7 +111,7 @@ pub fn inject(project: &mut Project, files: &mut GameFiles) -> Result<()> {
         let mut e9 = Pak::from_bytes(&pak.entries[9])?;
         let mut e16 = Pak::from_bytes(&pak.entries[16])?;
 
-        for i in 0..STUDENT_COUNT {
+        for i in 0..STUDENT_PICTURE_COUNT {
             use crate::encode_utf16;
             let report_card = &report_cards[&format!("{:02}", i)];
 
@@ -140,8 +157,8 @@ pub fn inject(project: &mut Project, files: &mut GameFiles) -> Result<()> {
         Ok(())
     })?;
 
-    for i in 0..STUDENT_COUNT {
-        project.open_file(&format!("report_card/{:02}.png", i), |data| {
+    for i in 0..STUDENT_PICTURE_COUNT {
+        project.open_file(&format!("report_card/pictures/{:02}.png", i), |data| {
             let mut tga = Vec::new();
             Tga::from_png(std::io::Cursor::new(&data), &mut tga)?;
 

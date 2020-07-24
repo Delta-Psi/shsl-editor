@@ -11,13 +11,19 @@ use log::info;
 pub struct GameFiles {
     pub dr2_data: Wad,
     pub dr2_data_us: Wad,
+    pub dr2_data_keyboard: Wad,
+    pub dr2_data_keyboard_us: Wad,
 }
 
 impl GameFiles {
-    pub fn new<P1: AsRef<Path>, P2: AsRef<Path>>(dr2_data_path: P1, dr2_data_us_path: P2) -> Result<Self> {
+    pub fn load<P: AsRef<Path>>(game_path: P) -> Result<Self> {
+        let game_path = game_path.as_ref();
+
         Ok(GameFiles {
-            dr2_data: Wad::open(dr2_data_path)?,
-            dr2_data_us: Wad::open(dr2_data_us_path)?,
+            dr2_data: Wad::open(&game_path.join("dr2_data.wad"))?,
+            dr2_data_us: Wad::open(&game_path.join("dr2_data_us.wad"))?,
+            dr2_data_keyboard: Wad::open(&game_path.join("dr2_data_keyboard.wad"))?,
+            dr2_data_keyboard_us: Wad::open(&game_path.join("dr2_data_keyboard_us.wad"))?,
         })
     }
 }
