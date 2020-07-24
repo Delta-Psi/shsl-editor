@@ -55,6 +55,10 @@ fn main() {
             .arg(Arg::with_name("INPUT")
                 .help("modified file")
                 .required(true)))
+        .subcommand(SubCommand::with_name("read-lin")
+            .about("Reads a .lin file")
+            .arg(Arg::with_name("LIN")
+                .required(true)))
 
         .subcommand(SubCommand::with_name("tga-to-png")
             .arg(Arg::with_name("INPUT")
@@ -162,6 +166,16 @@ fn main() {
 
                 std::fs::write(output_path, &data).expect("could not write output");
             },
+
+            "read-lin" => {
+                use dr2::formats::lin::Lin;
+
+                let input_path = matches.value_of("LIN").unwrap();
+                let input = std::fs::read(&input_path).expect("could not read input");
+
+                let lin = Lin::from_bytes(&input).expect("could not read lin");
+                println!("{:#?}", lin);
+            }
 
             _ => unreachable!(),
         }
