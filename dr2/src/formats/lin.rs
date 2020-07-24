@@ -13,7 +13,23 @@ pub struct Lin {
 impl Lin {
     pub fn from_bytes(data: &[u8]) -> Result<Self> {
         let pak = Pak::from_bytes(data)?;
-        let _instructions = &pak.entries[0];
+        let instructions = &pak.entries[0];
+        let mut slice = instructions.as_ref();
+        let mut instructions = Vec::new();
+        loop {
+            if slice.is_empty() {
+                break;
+            }
+
+            match Instr::read(slice)? {
+                Some((instr, size)) => {
+                    instructions.push(instr);
+                    slice = &slice[size..];
+                },
+                None => break,
+            }
+        }
+        
         let strings = match pak.entries.get(1) {
             Some(strings) => {
                 let strings_pak = Pak::from_bytes(&strings)?;
@@ -26,7 +42,7 @@ impl Lin {
         };
 
         Ok(Lin {
-            instructions: Vec::new(),
+            instructions,
             strings,
         })
     }

@@ -174,7 +174,13 @@ fn main() {
                 let input = std::fs::read(&input_path).expect("could not read input");
 
                 let lin = Lin::from_bytes(&input).expect("could not read lin");
-                println!("{:#?}", lin);
+
+                for instr in lin.instructions {
+                    println!("{:?}", instr);
+                }
+                if let Some(strings) = lin.strings {
+                    println!("{:#?}", strings);
+                }
             }
 
             _ => unreachable!(),
