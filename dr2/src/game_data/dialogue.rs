@@ -12,7 +12,7 @@ pub fn extract(project: &mut Project, files: &GameFiles) -> Result<()> {
 
         let mut names = toml::map::Map::with_capacity(pak.entries.len());
         for (i, entry) in pak.entries.iter().enumerate() {
-            let name = crate::decode_utf16(entry);
+            let name = crate::decode_utf16(entry)?;
             names.insert(format!("{:02}", i), toml::Value::String(name));
         }
 

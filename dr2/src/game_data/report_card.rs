@@ -38,29 +38,29 @@ pub fn extract(project: &mut Project, files: &GameFiles) -> Result<()> {
         use crate::decode_utf16;
 
         report_cards.insert(format!("{:02}", i), ReportCard {
-            name: decode_utf16(&e16.entries[i]),
-            height: decode_utf16(&e16.entries[STUDENT_COUNT + i]),
-            weight: decode_utf16(&e16.entries[2*STUDENT_COUNT + i]),
-            chest: decode_utf16(&e16.entries[3*STUDENT_COUNT + i]),
-            blood_type: decode_utf16(&e16.entries[4*STUDENT_COUNT + i]),
-            birthday: decode_utf16(&e16.entries[5*STUDENT_COUNT + i]),
-            likes: decode_utf16(&e16.entries[6*STUDENT_COUNT + i]),
-            dislikes: decode_utf16(&e16.entries[7*STUDENT_COUNT + i]),
+            name: decode_utf16(&e16.entries[i])?,
+            height: decode_utf16(&e16.entries[STUDENT_COUNT + i])?,
+            weight: decode_utf16(&e16.entries[2*STUDENT_COUNT + i])?,
+            chest: decode_utf16(&e16.entries[3*STUDENT_COUNT + i])?,
+            blood_type: decode_utf16(&e16.entries[4*STUDENT_COUNT + i])?,
+            birthday: decode_utf16(&e16.entries[5*STUDENT_COUNT + i])?,
+            likes: decode_utf16(&e16.entries[6*STUDENT_COUNT + i])?,
+            dislikes: decode_utf16(&e16.entries[7*STUDENT_COUNT + i])?,
 
             ultimate: [
-                decode_utf16(&e8.entries[i]),
-                decode_utf16(&e8.entries[STUDENT_COUNT + i]),
-                decode_utf16(&e8.entries[2*STUDENT_COUNT + i]),
+                decode_utf16(&e8.entries[i])?,
+                decode_utf16(&e8.entries[STUDENT_COUNT + i])?,
+                decode_utf16(&e8.entries[2*STUDENT_COUNT + i])?,
             ],
 
             fte_summaries: match i {
                 0 => None, // gets nothing :'(
                 _ => Some([
-                    decode_utf16(&e9.entries[(i-1)*5]),
-                    decode_utf16(&e9.entries[(i-1)*5 + 1]),
-                    decode_utf16(&e9.entries[(i-1)*5 + 2]),
-                    decode_utf16(&e9.entries[(i-1)*5 + 3]),
-                    decode_utf16(&e9.entries[(i-1)*5 + 4]),
+                    decode_utf16(&e9.entries[(i-1)*5])?,
+                    decode_utf16(&e9.entries[(i-1)*5 + 1])?,
+                    decode_utf16(&e9.entries[(i-1)*5 + 2])?,
+                    decode_utf16(&e9.entries[(i-1)*5 + 3])?,
+                    decode_utf16(&e9.entries[(i-1)*5 + 4])?,
                 ]),
             },
         });
@@ -98,32 +98,32 @@ pub fn inject(project: &mut Project, files: &mut GameFiles) -> Result<()> {
             use crate::encode_utf16;
             let report_card = &report_cards[&format!("{:02}", i)];
 
-            e16.entries[i] = Cow::Owned(encode_utf16(&report_card.name));
-            e16.entries[STUDENT_COUNT + i] = Cow::Owned(encode_utf16(&report_card.height));
-            e16.entries[2*STUDENT_COUNT + i] = Cow::Owned(encode_utf16(&report_card.weight));
-            e16.entries[3*STUDENT_COUNT + i] = Cow::Owned(encode_utf16(&report_card.chest));
-            e16.entries[4*STUDENT_COUNT + i] = Cow::Owned(encode_utf16(&report_card.blood_type));
-            e16.entries[5*STUDENT_COUNT + i] = Cow::Owned(encode_utf16(&report_card.birthday));
-            e16.entries[6*STUDENT_COUNT + i] = Cow::Owned(encode_utf16(&report_card.likes));
-            e16.entries[7*STUDENT_COUNT + i] = Cow::Owned(encode_utf16(&report_card.dislikes));
+            e16.entries[i] = Cow::Owned(encode_utf16(&report_card.name)?);
+            e16.entries[STUDENT_COUNT + i] = Cow::Owned(encode_utf16(&report_card.height)?);
+            e16.entries[2*STUDENT_COUNT + i] = Cow::Owned(encode_utf16(&report_card.weight)?);
+            e16.entries[3*STUDENT_COUNT + i] = Cow::Owned(encode_utf16(&report_card.chest)?);
+            e16.entries[4*STUDENT_COUNT + i] = Cow::Owned(encode_utf16(&report_card.blood_type)?);
+            e16.entries[5*STUDENT_COUNT + i] = Cow::Owned(encode_utf16(&report_card.birthday)?);
+            e16.entries[6*STUDENT_COUNT + i] = Cow::Owned(encode_utf16(&report_card.likes)?);
+            e16.entries[7*STUDENT_COUNT + i] = Cow::Owned(encode_utf16(&report_card.dislikes)?);
 
-            e8.entries[i] = Cow::Owned(encode_utf16(&report_card.ultimate[0]));
-            e8.entries[STUDENT_COUNT + i] = Cow::Owned(encode_utf16(&report_card.ultimate[1]));
-            e8.entries[2*STUDENT_COUNT + i] = Cow::Owned(encode_utf16(&report_card.ultimate[2]));
+            e8.entries[i] = Cow::Owned(encode_utf16(&report_card.ultimate[0])?);
+            e8.entries[STUDENT_COUNT + i] = Cow::Owned(encode_utf16(&report_card.ultimate[1])?);
+            e8.entries[2*STUDENT_COUNT + i] = Cow::Owned(encode_utf16(&report_card.ultimate[2])?);
 
             if i > 0 {
                 let summaries = report_card.fte_summaries.as_ref().unwrap();
 
                 e9.entries[(i-1)*5] =
-                    Cow::Owned(encode_utf16(&summaries[0]));
+                    Cow::Owned(encode_utf16(&summaries[0])?);
                 e9.entries[(i-1)*5 + 1] =
-                    Cow::Owned(encode_utf16(&summaries[1]));
+                    Cow::Owned(encode_utf16(&summaries[1])?);
                 e9.entries[(i-1)*5 + 2] =
-                    Cow::Owned(encode_utf16(&summaries[2]));
+                    Cow::Owned(encode_utf16(&summaries[2])?);
                 e9.entries[(i-1)*5 + 3] =
-                    Cow::Owned(encode_utf16(&summaries[3]));
+                    Cow::Owned(encode_utf16(&summaries[3])?);
                 e9.entries[(i-1)*5 + 4] =
-                    Cow::Owned(encode_utf16(&summaries[4]));
+                    Cow::Owned(encode_utf16(&summaries[4])?);
             }
         }
 
