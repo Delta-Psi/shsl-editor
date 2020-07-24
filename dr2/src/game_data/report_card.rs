@@ -6,6 +6,7 @@ use crate::formats::tga::{Tga, TgaExt};
 use serde::{Serialize, Deserialize};
 
 pub const STUDENT_COUNT: usize = 16;
+pub const STUDENT_ICON_COUNT: usize = 18;
 pub const STUDENT_PICTURE_COUNT: usize = 19;
 
 #[derive(Serialize, Deserialize)]
@@ -83,6 +84,22 @@ pub fn extract(project: &mut Project, files: &GameFiles) -> Result<()> {
 
         project.write_file(format!("report_card/names/{:02}.png", i), &png.into_inner())?;
     }
+
+    // ICONS
+    let e3 = Pak::from_bytes(&pak.entries[3])?;
+    for i in 0..STUDENT_ICON_COUNT {
+        let entry_index = match i {
+            0 => 11,
+            _ => 29-i,
+        };
+
+        let image = Tga::from_bytes(&e3.entries[entry_index])?;
+        let mut png = std::io::Cursor::new(Vec::new());
+        image.to_png(&mut png)?;
+
+        project.write_file(format!("report_card/icons/{:02}.png", i), &png.into_inner())?;
+    }
+
 
     // PICTURES
     for i in 0..STUDENT_PICTURE_COUNT {
