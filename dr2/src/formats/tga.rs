@@ -9,9 +9,9 @@ use crate::errors::*;
 pub trait TgaExt<'a>: Sized {
     /// This method is preferred, as it returns an actually usable error type.
     fn from_bytes(data: &'a [u8]) -> Result<Self>;
-    fn to_png<W: Write>(&self, writer: W) -> Result<()>;
-    /// Directly encodes the TGA file into `buf`.
-    fn from_png<R: Read>(reader: R, buf: &mut Vec<u8>) -> Result<()>;
+    fn to_png(&self) -> Result<Vec<u8>>;
+    /// Directly encodes and returns TGA data.
+    fn from_png(data: &[u8]) -> Result<Vec<u8>>;
 }
 
 impl<'a> TgaExt<'a> for Tga<'a> {
@@ -19,8 +19,9 @@ impl<'a> TgaExt<'a> for Tga<'a> {
         Self::from_slice(data).map_err(|_| ErrorKind::TgaDecoding.into())
     }
 
-    fn to_png<W: Write>(&self, writer: W) -> Result<()> {
-        let mut encoder = png::Encoder::new(writer, self.width() as u32, self.height() as u32);
+    fn to_png(&self) -> Result<Vec<u8>> {
+        let mut buf = std::io::Cursor::new(Vec::new());
+        let mut encoder = png::Encoder::new(&mut buf, self.width() as u32, self.height() as u32);
         let mut pixel_data = self.pixel_data.to_vec();
 
         match self.header.image_type {
@@ -93,11 +94,13 @@ impl<'a> TgaExt<'a> for Tga<'a> {
 
         let mut writer = encoder.write_header()?;
         writer.write_image_data(&pixel_data[0..w*h*(self.header.pixel_depth/8) as usize])?;
+        drop(writer);
 
-        Ok(())
+        Ok(buf.into_inner())
     }
 
-    fn from_png<R: Read>(reader: R, buf: &mut Vec<u8>) -> Result<()> {
+    fn from_png(data: &[u8]) -> Result<Vec<u8>> {
+        let reader = std::io::Cursor::new(data);
         let mut decoder = png::Decoder::new(reader);
         decoder.set_transformations(png::Transformations::IDENTITY);
         let (info, mut reader) = decoder.read_info()?;
@@ -107,7 +110,7 @@ impl<'a> TgaExt<'a> for Tga<'a> {
 
         let info = reader.info();
 
-        let mut writer = std::io::Cursor::new(buf);
+        let mut writer = std::io::Cursor::new(Vec::new());
 
         if info.interlaced {
             unimplemented!("interlaced png");
@@ -183,6 +186,6 @@ impl<'a> TgaExt<'a> for Tga<'a> {
         // write pixel data
         writer.write_all(&pixel_data)?;
 
-        Ok(())
+        Ok(writer.into_inner())
     } 
 }

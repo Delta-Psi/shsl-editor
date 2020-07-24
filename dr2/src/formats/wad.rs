@@ -203,24 +203,22 @@ impl Wad {
         Ok(paths.into_iter())
     }
 
-    /// Reads the entire file in the specified path, if any, and appends it
-    /// to buf.
-    pub fn read_file(&self, path: &str, buf: &mut Vec<u8>) -> Result<()> {
+    /// Reads the entire file in the specified path, if any, and
+    /// returns it in a buffer.
+    pub fn read_file(&self, path: &str) -> Result<Vec<u8>> {
+        info!("reading {} from {}", path, self.wad_path.display());
         let index = *self.files.get(path).ok_or_else(|| ErrorKind::UnknownWadFile(path.to_string()))?;
         let entry = &self.header.files[index];
         let mut file = self.file.borrow_mut();
 
-        // allocate enough space for the data
-        let begin = buf.len();
-        buf.resize(begin + entry.size as usize, 0);
-
         // read the data
         let offset = self.header.size + entry.offset;
         file.seek(SeekFrom::Start(offset))?;
-        file.read_exact(&mut buf[begin..])?;
+        let mut buf = vec![0; entry.size as usize];
+        file.read_exact(&mut buf)?;
 
         // we're done
-        Ok(())
+        Ok(buf)
     }
 
     /// Injects a modified file into the WAD.

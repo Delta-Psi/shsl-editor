@@ -106,8 +106,7 @@ fn main() {
                 let wad = wad::Wad::open(&wad_path).expect("could not load wad");
 
                 let inner_path = matches.value_of("PATH").unwrap();
-                let mut data = Vec::new();
-                wad.read_file(&inner_path, &mut data).expect("could not read inner file");
+                let data = wad.read_file(&inner_path).expect("could not read inner file");
 
                 // extract filename
                 let fname = inner_path.rsplitn(2, '/').next().unwrap();
@@ -138,32 +137,26 @@ fn main() {
             }
 
             "tga-to-png" => {
-                use std::io::prelude::*;
-                use std::fs::File;
                 use dr2::formats::tga::{self, TgaExt};
 
                 let input_path = matches.value_of("INPUT").unwrap();
                 let output_path = matches.value_of("OUTPUT").unwrap();
 
-                let mut input = Vec::new();
-                File::open(&input_path).expect("could not open input").read_to_end(&mut input).expect("count not read input");
-
+                let input = std::fs::read(&input_path).expect("could not read input");
                 let image = tga::Tga::from_slice(&input).expect("could not parse tga");
 
-                let mut output = File::create(&output_path).expect("count not create output");
-                image.to_png(&mut output).expect("could not write png");
+                let output = image.to_png().expect("could not write png");
+                std::fs::write(&output_path, &output).expect("could not write to output");
             },
 
             "png-to-tga" => {
-                use std::fs::File;
                 use dr2::formats::tga::{Tga, TgaExt};
 
                 let input_path = matches.value_of("INPUT").unwrap();
                 let output_path = matches.value_of("OUTPUT").unwrap();
 
-                let mut input = File::open(&input_path).expect("could not open input");
-                let mut data = Vec::new();
-                Tga::from_png(&mut input, &mut data).expect("could not convert to png");
+                let input = std::fs::read(&input_path).expect("could not read input");
+                let data = Tga::from_png(&input).expect("could not convert to tga");
 
                 Tga::from_bytes(&data).expect("invalid tga generated");
 

@@ -27,8 +27,7 @@ pub fn extract(project: &mut Project, files: &GameFiles) -> Result<()> {
         })();
 
         if let Some((index, is_ogg)) = result {
-            let mut data = Vec::new();
-            wad.read_file(&wad_path, &mut data)?;
+            let data = wad.read_file(&wad_path)?;
 
             if is_ogg {
                 project.write_file(format!("music/{:03}.ogg", index), &data)?;
@@ -76,13 +75,12 @@ pub fn inject(project: &mut Project, files: &mut GameFiles) -> Result<()> {
                     let loop_begin = (track.loop_begin * SAMPLE_RATE) as u32;
                     let loop_end = (track.loop_end * SAMPLE_RATE) as u32;
 
-                    let mut buf = Vec::new();
-                    wad.read_file(&wad_path, &mut buf)?;
+                    let mut data = wad.read_file(&wad_path)?;
 
-                    LE::write_u32(&mut buf[4..8], loop_begin);
-                    LE::write_u32(&mut buf[8..12], loop_end);
+                    LE::write_u32(&mut data[4..8], loop_begin);
+                    LE::write_u32(&mut data[8..12], loop_end);
 
-                    wad.inject_file(&wad_path, &buf)?;
+                    wad.inject_file(&wad_path, &data)?;
 
                     Ok(())
                 })?;

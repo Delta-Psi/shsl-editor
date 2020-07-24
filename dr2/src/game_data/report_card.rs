@@ -27,9 +27,8 @@ pub struct ReportCard {
 
 pub fn extract(project: &mut Project, files: &GameFiles) -> Result<()> {
     // REPORT CARD TEXT
-    let mut buf = Vec::new();
-    files.dr2_data_us.read_file("Dr2/data/us/bin/bin_progress_font_l.pak", &mut buf)?;
-    let pak = Pak::from_bytes(&buf)?;
+    let pak = files.dr2_data_us.read_file("Dr2/data/us/bin/bin_progress_font_l.pak")?;
+    let pak = Pak::from_bytes(&pak)?;
 
     let e8 = Pak::from_bytes(&pak.entries[8])?;
     let e9 = Pak::from_bytes(&pak.entries[9])?;
@@ -71,18 +70,15 @@ pub fn extract(project: &mut Project, files: &GameFiles) -> Result<()> {
     project.write_toml("report_card.toml", &report_cards)?;
 
     // NAME IMAGES
-    buf.clear();
-    files.dr2_data_keyboard_us.read_file("Dr2/data/us/bin/bin_pb_report_l.pak", &mut buf)?;
-
-    let pak = Pak::from_bytes(&buf)?;
+    let pak = files.dr2_data_keyboard_us.read_file("Dr2/data/us/bin/bin_pb_report_l.pak")?;
+    let pak = Pak::from_bytes(&pak)?;
     let e2 = Pak::from_bytes(&pak.entries[2])?;
 
     for i in 0..STUDENT_COUNT {
         let image = Tga::from_bytes(&e2.entries[20-i])?;
-        let mut png = std::io::Cursor::new(Vec::new());
-        image.to_png(&mut png)?;
+        let png = image.to_png()?;
 
-        project.write_file(format!("report_card/names/{:02}.png", i), &png.into_inner())?;
+        project.write_file(format!("report_card/names/{:02}.png", i), &png)?;
     }
 
     // ICONS
@@ -94,22 +90,18 @@ pub fn extract(project: &mut Project, files: &GameFiles) -> Result<()> {
         };
 
         let image = Tga::from_bytes(&e3.entries[entry_index])?;
-        let mut png = std::io::Cursor::new(Vec::new());
-        image.to_png(&mut png)?;
+        let png = image.to_png()?;
 
-        project.write_file(format!("report_card/icons/{:02}.png", i), &png.into_inner())?;
+        project.write_file(format!("report_card/icons/{:02}.png", i), &png)?;
     }
 
     // PICTURES
     for i in 0..STUDENT_PICTURE_COUNT {
-        let mut buf = Vec::new();
-        files.dr2_data.read_file(&format!("Dr2/data/all/cg/report/tsushimbo_chara_{:03}.tga", i), &mut buf)?;
+        let tga = files.dr2_data.read_file(&format!("Dr2/data/all/cg/report/tsushimbo_chara_{:03}.tga", i))?;
+        let image = Tga::from_bytes(&tga)?;
+        let png = image.to_png()?;
 
-        let image = Tga::from_bytes(&buf)?;
-        let mut png = std::io::Cursor::new(Vec::new());
-        image.to_png(&mut png)?;
-
-        project.write_file(format!("report_card/pictures/{:02}.png", i), &png.into_inner())?;
+        project.write_file(format!("report_card/pictures/{:02}.png", i), &png)?;
     }
 
     Ok(())
@@ -119,9 +111,8 @@ pub fn inject(project: &mut Project, files: &mut GameFiles) -> Result<()> {
     project.open_file("report_card.toml", |data| {
         let report_cards: BTreeMap<String, ReportCard> = toml::de::from_slice(&data)?;
         
-        let mut buf = Vec::new();
-        files.dr2_data_us.read_file("Dr2/data/us/bin/bin_progress_font_l.pak", &mut buf)?;
-        let mut pak = Pak::from_bytes(&buf)?;
+        let pak = files.dr2_data_us.read_file("Dr2/data/us/bin/bin_progress_font_l.pak")?;
+        let mut pak = Pak::from_bytes(&pak)?;
 
         let mut e8 = Pak::from_bytes(&pak.entries[8])?;
         let mut e9 = Pak::from_bytes(&pak.entries[9])?;
@@ -173,10 +164,8 @@ pub fn inject(project: &mut Project, files: &mut GameFiles) -> Result<()> {
         Ok(())
     })?;
 
-    let mut buf = Vec::new();
-    files.dr2_data_keyboard_us.read_file("Dr2/data/us/bin/bin_pb_report_l.pak", &mut buf)?;
-
-    let mut pak = Pak::from_bytes(&buf)?;
+    let pak = files.dr2_data_keyboard_us.read_file("Dr2/data/us/bin/bin_pb_report_l.pak")?;
+    let mut pak = Pak::from_bytes(&pak)?;
     let mut modified = false;
 
     // NAME IMAGES
@@ -184,8 +173,7 @@ pub fn inject(project: &mut Project, files: &mut GameFiles) -> Result<()> {
 
     for i in 0..STUDENT_COUNT {
         project.open_file(&format!("report_card/names/{:02}.png", i), |data| {
-            let mut tga = Vec::new();
-            Tga::from_png(std::io::Cursor::new(&data), &mut tga)?;
+            let tga = Tga::from_png(&data)?;
 
             e2.entries[20-i] = Cow::Owned(tga);
 
@@ -204,8 +192,7 @@ pub fn inject(project: &mut Project, files: &mut GameFiles) -> Result<()> {
                 _ => 29-i,
             };
 
-            let mut tga = Vec::new();
-            Tga::from_png(std::io::Cursor::new(&data), &mut tga)?;
+            let tga = Tga::from_png(&data)?;
 
             e3.entries[entry_index] = Cow::Owned(tga);
 
@@ -225,8 +212,7 @@ pub fn inject(project: &mut Project, files: &mut GameFiles) -> Result<()> {
     // PICTURES
     for i in 0..STUDENT_PICTURE_COUNT {
         project.open_file(&format!("report_card/pictures/{:02}.png", i), |data| {
-            let mut tga = Vec::new();
-            Tga::from_png(std::io::Cursor::new(&data), &mut tga)?;
+            let tga = Tga::from_png(&data)?;
 
             files.dr2_data.inject_file(&format!("Dr2/data/all/cg/report/tsushimbo_chara_{:03}.tga", i), &tga)?;
 
