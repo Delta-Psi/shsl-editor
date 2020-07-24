@@ -9,7 +9,7 @@ pub const STUDENT_COUNT: usize = 16;
 pub const STUDENT_ICON_COUNT: usize = 18;
 pub const STUDENT_PICTURE_COUNT: usize = 19;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct ReportCard {
     pub name: String,
     pub height: String,
@@ -127,7 +127,7 @@ pub fn inject(project: &mut Project, files: &mut GameFiles) -> Result<()> {
         let mut e9 = Pak::from_bytes(&pak.entries[9])?;
         let mut e16 = Pak::from_bytes(&pak.entries[16])?;
 
-        for i in 0..STUDENT_PICTURE_COUNT {
+        for i in 0..STUDENT_COUNT {
             use crate::encode_utf16;
             let report_card = &report_cards[&format!("{:02}", i)];
 
