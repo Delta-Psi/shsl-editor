@@ -1,8 +1,9 @@
 [package]
-name = "cli"
+name = "shsl-editor-cli"
 version = "0.1.0"
 authors = ["Delta-Psi <delta.psi00@gmail.com>"]
 edition = "2018"
+license = "MIT"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
