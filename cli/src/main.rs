@@ -188,24 +188,43 @@ fn main() {
         let stdin = std::io::stdin();
         let mut stdin = stdin.lock();
 
-        print!("Path of dr2_data.wad: ");
+        print!("Pick one of extract, inject: ");
         stdout.flush().unwrap();
-        let mut dr2_data_path = String::new();
-        stdin.read_line(&mut dr2_data_path).unwrap();
+        let mut choice = String::new();
+        stdin.read_line(&mut choice).unwrap();
+        let choice = choice.trim();
 
-        print!("Path of dr2_data_us.wad: ");
-        stdout.flush().unwrap();
-        let mut dr2_data_us_path = String::new();
-        stdin.read_line(&mut dr2_data_us_path).unwrap();
+        if choice != "extract" && choice != "inject" {
+            print!("invalid mode");
+        } else {
+            print!("Path of dr2_data.wad: ");
+            stdout.flush().unwrap();
+            let mut dr2_data_path = String::new();
+            stdin.read_line(&mut dr2_data_path).unwrap();
 
-        print!("Output directory: ");
-        stdout.flush().unwrap();
-        let mut outdir = String::new();
-        stdin.read_line(&mut outdir).unwrap();
+            print!("Path of dr2_data_us.wad: ");
+            stdout.flush().unwrap();
+            let mut dr2_data_us_path = String::new();
+            stdin.read_line(&mut dr2_data_us_path).unwrap();
 
-        extract(dr2_data_path.trim(),
-                dr2_data_us_path.trim(),
-                outdir.trim());
+            print!("Project directory: ");
+            stdout.flush().unwrap();
+            let mut projdir = String::new();
+            stdin.read_line(&mut projdir).unwrap();
+
+            if choice == "extract" {
+                extract(dr2_data_path.trim(),
+                    dr2_data_us_path.trim(),
+                    projdir.trim());
+            } else {
+                inject(dr2_data_path.trim(),
+                    dr2_data_us_path.trim(),
+                    projdir.trim());
+            }
+        }
+
+        println!("Finished!");
+        stdin.bytes().next().unwrap().unwrap();
     }
 }
 
