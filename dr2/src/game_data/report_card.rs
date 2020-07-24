@@ -140,5 +140,16 @@ pub fn inject(project: &mut Project, files: &mut GameFiles) -> Result<()> {
         Ok(())
     })?;
 
+    for i in 0..STUDENT_COUNT {
+        project.open_file(&format!("report_card/{:02}.png", i), |data| {
+            let mut tga = Vec::new();
+            Tga::from_png(std::io::Cursor::new(&data), &mut tga)?;
+
+            files.dr2_data.inject_file(&format!("Dr2/data/all/cg/report/tsushimbo_chara_{:03}.tga", i), &tga)?;
+
+            Ok(())
+        })?;
+    }
+
     Ok(())
 }
