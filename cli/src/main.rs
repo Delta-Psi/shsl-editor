@@ -3,6 +3,7 @@
 pub const VERSION: &'static str = "0.1.0";
 
 fn main() {
+    std::env::set_var("RUST_LOG", "info");
     pretty_env_logger::init();
 
     use clap::{App, SubCommand, Arg};
@@ -82,7 +83,7 @@ fn main() {
                 let dr2_data_us_path = matches.value_of("DR2_DATA_US").unwrap();
                 let outdir = matches.value_of("OUTDIR").unwrap();
 
-                extract(dr2_data_path, dr2_data_us_path, outdir);
+                extract(dr2_data_path, dr2_data_us_path, outdir).unwrap();
             }
 
             "inject" => {
@@ -90,7 +91,7 @@ fn main() {
                 let dr2_data_us_path = matches.value_of("DR2_DATA_US").unwrap();
                 let indir = matches.value_of("INDIR").unwrap();
 
-                inject(dr2_data_path, dr2_data_us_path, indir);
+                inject(dr2_data_path, dr2_data_us_path, indir).unwrap();
             }
 
             "wad-list" => {
@@ -188,58 +189,68 @@ fn main() {
         let stdin = std::io::stdin();
         let mut stdin = stdin.lock();
 
-        print!("Pick one of extract, inject: ");
-        stdout.flush().unwrap();
+        println!("Type in one of the commands below.\nextract\ninject");
         let mut choice = String::new();
         stdin.read_line(&mut choice).unwrap();
         let choice = choice.trim();
 
         if choice != "extract" && choice != "inject" {
-            print!("invalid mode");
+            println!("invalid mode");
         } else {
-            print!("Path of dr2_data.wad: ");
-            stdout.flush().unwrap();
-            let mut dr2_data_path = String::new();
-            stdin.read_line(&mut dr2_data_path).unwrap();
+            let result: dr2::errors::Result<()> = (|| {
+                print!("Path of dr2_data.wad: ");
+                stdout.flush().unwrap();
+                let mut dr2_data_path = String::new();
+                stdin.read_line(&mut dr2_data_path).unwrap();
 
-            print!("Path of dr2_data_us.wad: ");
-            stdout.flush().unwrap();
-            let mut dr2_data_us_path = String::new();
-            stdin.read_line(&mut dr2_data_us_path).unwrap();
+                print!("Path of dr2_data_us.wad: ");
+                stdout.flush().unwrap();
+                let mut dr2_data_us_path = String::new();
+                stdin.read_line(&mut dr2_data_us_path).unwrap();
 
-            print!("Project directory: ");
-            stdout.flush().unwrap();
-            let mut projdir = String::new();
-            stdin.read_line(&mut projdir).unwrap();
+                print!("Project directory: ");
+                stdout.flush().unwrap();
+                let mut projdir = String::new();
+                stdin.read_line(&mut projdir).unwrap();
 
-            if choice == "extract" {
-                extract(dr2_data_path.trim(),
+                if choice == "extract" {
+                    extract(dr2_data_path.trim(),
                     dr2_data_us_path.trim(),
-                    projdir.trim());
-            } else {
-                inject(dr2_data_path.trim(),
+                    projdir.trim())?;
+                } else {
+                    inject(dr2_data_path.trim(),
                     dr2_data_us_path.trim(),
-                    projdir.trim());
+                    projdir.trim())?;
+                }
+
+                println!("Finished!");
+                Ok(())
+            })();
+            match result {
+                Ok(()) => (),
+                Err(err) => println!("ERROR: {}", err),
             }
         }
-
-        println!("Finished!");
         stdin.bytes().next().unwrap().unwrap();
     }
 }
 
-pub fn extract(dr2_data_path: &str, dr2_data_us_path: &str, outdir: &str) {
+pub fn extract(dr2_data_path: &str, dr2_data_us_path: &str, outdir: &str) -> dr2::errors::Result<()> {
     use dr2::game_data;
 
-    let mut project = game_data::Project::create(outdir, Default::default()).unwrap();
-    let game_files = game_data::GameFiles::new(dr2_data_path, dr2_data_us_path).unwrap();
-    game_data::extract(&mut project, &game_files).unwrap();
+    let mut project = game_data::Project::create(outdir, Default::default())?;
+    let game_files = game_data::GameFiles::new(dr2_data_path, dr2_data_us_path)?;
+    game_data::extract(&mut project, &game_files)?;
+
+    Ok(())
 }
 
-pub fn inject(dr2_data_path: &str, dr2_data_us_path: &str, indir: &str) {
+pub fn inject(dr2_data_path: &str, dr2_data_us_path: &str, indir: &str) -> dr2::errors::Result<()> {
     use dr2::game_data;
 
-    let mut project = game_data::Project::open(indir).unwrap();
-    let mut game_files = game_data::GameFiles::new(dr2_data_path, dr2_data_us_path).unwrap();
-    game_data::inject(&mut project, &mut game_files).unwrap();
+    let mut project = game_data::Project::open(indir)?;
+    let mut game_files = game_data::GameFiles::new(dr2_data_path, dr2_data_us_path)?;
+    game_data::inject(&mut project, &mut game_files)?;
+
+    Ok(())
 }
