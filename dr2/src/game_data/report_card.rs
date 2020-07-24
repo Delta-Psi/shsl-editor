@@ -100,7 +100,6 @@ pub fn extract(project: &mut Project, files: &GameFiles) -> Result<()> {
         project.write_file(format!("report_card/icons/{:02}.png", i), &png.into_inner())?;
     }
 
-
     // PICTURES
     for i in 0..STUDENT_PICTURE_COUNT {
         let mut buf = Vec::new();
@@ -174,6 +173,56 @@ pub fn inject(project: &mut Project, files: &mut GameFiles) -> Result<()> {
         Ok(())
     })?;
 
+    let mut buf = Vec::new();
+    files.dr2_data_keyboard_us.read_file("Dr2/data/us/bin/bin_pb_report_l.pak", &mut buf)?;
+
+    let mut pak = Pak::from_bytes(&buf)?;
+    let mut modified = false;
+
+    // NAME IMAGES
+    let mut e2 = Pak::from_bytes(&pak.entries[2])?;
+
+    for i in 0..STUDENT_COUNT {
+        project.open_file(&format!("report_card/names/{:02}.png", i), |data| {
+            let mut tga = Vec::new();
+            Tga::from_png(std::io::Cursor::new(&data), &mut tga)?;
+
+            e2.entries[20-i] = Cow::Owned(tga);
+
+            modified = true;
+            Ok(())
+        })?;
+    }
+
+    // ICONS
+    let mut e3 = Pak::from_bytes(&pak.entries[3])?;
+
+    for i in 0..STUDENT_ICON_COUNT {
+        project.open_file(&format!("report_card/icons/{:02}.png", i), |data| {
+            let entry_index = match i {
+                0 => 11,
+                _ => 29-i,
+            };
+
+            let mut tga = Vec::new();
+            Tga::from_png(std::io::Cursor::new(&data), &mut tga)?;
+
+            e3.entries[entry_index] = Cow::Owned(tga);
+
+            modified = true;
+            Ok(())
+        })?;
+    }
+
+    if modified {
+        let e2 = e2.repack()?;
+        let e3 = e3.repack()?;
+        pak.entries[2] = Cow::Owned(e2);
+        pak.entries[3] = Cow::Owned(e3);
+        files.dr2_data_keyboard_us.inject_file("Dr2/data/us/bin/bin_pb_report_l.pak", &pak.repack()?)?;
+    }
+
+    // PICTURES
     for i in 0..STUDENT_PICTURE_COUNT {
         project.open_file(&format!("report_card/pictures/{:02}.png", i), |data| {
             let mut tga = Vec::new();

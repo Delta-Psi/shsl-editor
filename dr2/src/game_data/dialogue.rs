@@ -88,6 +88,7 @@ pub fn inject(project: &mut Project, files: &mut GameFiles) -> Result<()> {
     let mut buf = Vec::new();
     files.dr2_data_us.read_file("Dr2/data/us/cg/chara_name.pak", &mut buf)?;
     let mut pak = Pak::from_bytes(&buf)?;
+    let mut modified = false;
 
     for (i, entry) in pak.entries.iter_mut().enumerate() {
         project.open_file(&format!("dialogue/names/{:02}.png", i), |data| {
@@ -96,12 +97,15 @@ pub fn inject(project: &mut Project, files: &mut GameFiles) -> Result<()> {
 
             *entry = Cow::Owned(tga);
 
+            modified = true;
             Ok(())
         })?;
     }
 
-    let pak = pak.repack()?;
-    files.dr2_data_us.inject_file("Dr2/data/us/cg/chara_name.pak", &pak)?;
+    if modified {
+        let pak = pak.repack()?;
+        files.dr2_data_us.inject_file("Dr2/data/us/cg/chara_name.pak", &pak)?;
+    }
 
     // SPRITES
     for wad_path in files.dr2_data.list_dir("Dr2/data/all/cg", true)? {

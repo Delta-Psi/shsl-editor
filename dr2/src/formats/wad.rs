@@ -5,6 +5,7 @@ use std::fs::File;
 use std::path::{Path, PathBuf};
 use std::collections::HashMap;
 use std::cell::RefCell;
+use log::info;
 
 use crate::errors::*;
 use error_chain::bail;
@@ -224,6 +225,7 @@ impl Wad {
 
     /// Injects a modified file into the WAD.
     pub fn inject_file(&mut self, path: &str, data: &[u8]) -> Result<()> {
+        info!("injecting {} into {}", path, self.wad_path.display());
         let index = *self.files.get(path).ok_or_else(|| ErrorKind::UnknownWadFile(path.to_string()))?;
 
         // reopen the file in write mode
