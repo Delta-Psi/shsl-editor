@@ -176,7 +176,7 @@ fn main() {
                 let lin = Lin::from_bytes(&input).expect("could not read lin");
 
                 for instr in lin.instructions {
-                    println!("{:?}", instr);
+                    println!("{:x?}", instr);
                 }
                 if let Some(strings) = lin.strings {
                     println!("{:#?}", strings);

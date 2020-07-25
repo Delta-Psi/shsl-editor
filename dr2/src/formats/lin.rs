@@ -21,13 +21,9 @@ impl Lin {
                 break;
             }
 
-            match Instr::read(slice)? {
-                Some((instr, size)) => {
-                    instructions.push(instr);
-                    slice = &slice[size..];
-                },
-                None => break,
-            }
+            let (instr, size) = Instr::read(slice)?;
+            instructions.push(instr);
+            slice = &slice[size..];
         }
         
         let strings = match pak.entries.get(1) {

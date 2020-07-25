@@ -29,20 +29,22 @@ pub enum Instr {
     WaitFrame,
 
     Unknown(u8, Vec<u8>),
+    Raw(u8),
 }
 
 impl Instr {
     // (instruction, bytes to advance)
-    pub fn read(data: &[u8]) -> Result<Option<(Self, usize)>> {
+    pub fn read(data: &[u8]) -> Result<(Self, usize)> {
         use Instr::*;
 
         // TODO: port this over from disassembly (0x57bd70/0x57bda0)
+        // probably not just that function
         if data[0] != 0x70 {
-            warn!("unknown opcode marker {}; stopping", data[0]);
-            return Ok(None);
+            warn!("unknown byte {}", data[0]);
+            return Ok((Raw(data[0]), 1));
         }
 
-        Ok(Some( match data[1] {
+        Ok(match data[1] {
             0x00 => (TextCount(LE::read_u16(&data[2..4])), 4),
             0x02 => (Text(BE::read_u16(&data[2..4])), 4),
             0x03 => (Format(data[2]), 3),
@@ -54,14 +56,14 @@ impl Instr {
             0x4c => (WaitFrame, 2),
 
             op @ 0x4e..=0xff => {
-                warn!("invalid opcode {}; stopping", op);
-                return Ok(None);
+                warn!("invalid opcode {:x}", op);
+                (Raw(op), 1)
             },
 
             op => {
                 let arg_length = ARGUMENT_LENGTHS[op as usize] as usize;
                 (Unknown(op, data[2..2+arg_length].to_owned()), 2+arg_length)
             }
-        }))
+        })
     }
 }
