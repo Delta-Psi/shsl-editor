@@ -1,9 +1,9 @@
 use super::*;
-use std::collections::BTreeMap;
-use std::borrow::Cow;
 use crate::formats::pak::Pak;
 use crate::formats::tga::{Tga, TgaExt};
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
+use std::borrow::Cow;
+use std::collections::BTreeMap;
 
 pub const STUDENT_COUNT: usize = 16;
 pub const STUDENT_ICON_COUNT: usize = 18;
@@ -27,7 +27,9 @@ pub struct ReportCard {
 
 pub fn extract(project: &mut Project, files: &GameFiles) -> Result<()> {
     // REPORT CARD TEXT
-    let pak = files.dr2_data_us.read_file("Dr2/data/us/bin/bin_progress_font_l.pak")?;
+    let pak = files
+        .dr2_data_us
+        .read_file("Dr2/data/us/bin/bin_progress_font_l.pak")?;
     let pak = Pak::from_bytes(&pak)?;
 
     let e8 = Pak::from_bytes(&pak.entries[8])?;
@@ -39,43 +41,48 @@ pub fn extract(project: &mut Project, files: &GameFiles) -> Result<()> {
     for i in 0..STUDENT_COUNT {
         use crate::decode_utf16;
 
-        report_cards.insert(format!("{:02}", i), ReportCard {
-            name: decode_utf16(&e16.entries[i])?,
-            height: decode_utf16(&e16.entries[STUDENT_COUNT + i])?,
-            weight: decode_utf16(&e16.entries[2*STUDENT_COUNT + i])?,
-            chest: decode_utf16(&e16.entries[3*STUDENT_COUNT + i])?,
-            blood_type: decode_utf16(&e16.entries[4*STUDENT_COUNT + i])?,
-            birthday: decode_utf16(&e16.entries[5*STUDENT_COUNT + i])?,
-            likes: decode_utf16(&e16.entries[6*STUDENT_COUNT + i])?,
-            dislikes: decode_utf16(&e16.entries[7*STUDENT_COUNT + i])?,
+        report_cards.insert(
+            format!("{:02}", i),
+            ReportCard {
+                name: decode_utf16(&e16.entries[i])?,
+                height: decode_utf16(&e16.entries[STUDENT_COUNT + i])?,
+                weight: decode_utf16(&e16.entries[2 * STUDENT_COUNT + i])?,
+                chest: decode_utf16(&e16.entries[3 * STUDENT_COUNT + i])?,
+                blood_type: decode_utf16(&e16.entries[4 * STUDENT_COUNT + i])?,
+                birthday: decode_utf16(&e16.entries[5 * STUDENT_COUNT + i])?,
+                likes: decode_utf16(&e16.entries[6 * STUDENT_COUNT + i])?,
+                dislikes: decode_utf16(&e16.entries[7 * STUDENT_COUNT + i])?,
 
-            ultimate: [
-                decode_utf16(&e8.entries[i])?,
-                decode_utf16(&e8.entries[STUDENT_COUNT + i])?,
-                decode_utf16(&e8.entries[2*STUDENT_COUNT + i])?,
-            ],
+                ultimate: [
+                    decode_utf16(&e8.entries[i])?,
+                    decode_utf16(&e8.entries[STUDENT_COUNT + i])?,
+                    decode_utf16(&e8.entries[2 * STUDENT_COUNT + i])?,
+                ],
 
-            fte_summaries: match i {
-                0 => None, // gets nothing :'(
-                _ => Some([
-                    decode_utf16(&e9.entries[(i-1)*5])?,
-                    decode_utf16(&e9.entries[(i-1)*5 + 1])?,
-                    decode_utf16(&e9.entries[(i-1)*5 + 2])?,
-                    decode_utf16(&e9.entries[(i-1)*5 + 3])?,
-                    decode_utf16(&e9.entries[(i-1)*5 + 4])?,
-                ]),
+                fte_summaries: match i {
+                    0 => None, // gets nothing :'(
+                    _ => Some([
+                        decode_utf16(&e9.entries[(i - 1) * 5])?,
+                        decode_utf16(&e9.entries[(i - 1) * 5 + 1])?,
+                        decode_utf16(&e9.entries[(i - 1) * 5 + 2])?,
+                        decode_utf16(&e9.entries[(i - 1) * 5 + 3])?,
+                        decode_utf16(&e9.entries[(i - 1) * 5 + 4])?,
+                    ]),
+                },
             },
-        });
+        );
     }
     project.write_toml("report_card.toml", &report_cards)?;
 
     // NAME IMAGES
-    let pak = files.dr2_data_keyboard_us.read_file("Dr2/data/us/bin/bin_pb_report_l.pak")?;
+    let pak = files
+        .dr2_data_keyboard_us
+        .read_file("Dr2/data/us/bin/bin_pb_report_l.pak")?;
     let pak = Pak::from_bytes(&pak)?;
     let e2 = Pak::from_bytes(&pak.entries[2])?;
 
     for i in 0..STUDENT_COUNT {
-        let image = Tga::from_bytes(&e2.entries[20-i])?;
+        let image = Tga::from_bytes(&e2.entries[20 - i])?;
         let png = image.to_png()?;
 
         project.write_file(format!("report_card/names/{:02}.png", i), &png)?;
@@ -86,7 +93,7 @@ pub fn extract(project: &mut Project, files: &GameFiles) -> Result<()> {
     for i in 0..STUDENT_ICON_COUNT {
         let entry_index = match i {
             0 => 11,
-            _ => 29-i,
+            _ => 29 - i,
         };
 
         let image = Tga::from_bytes(&e3.entries[entry_index])?;
@@ -97,7 +104,10 @@ pub fn extract(project: &mut Project, files: &GameFiles) -> Result<()> {
 
     // PICTURES
     for i in 0..STUDENT_PICTURE_COUNT {
-        let tga = files.dr2_data.read_file(&format!("Dr2/data/all/cg/report/tsushimbo_chara_{:03}.tga", i))?;
+        let tga = files.dr2_data.read_file(&format!(
+            "Dr2/data/all/cg/report/tsushimbo_chara_{:03}.tga",
+            i
+        ))?;
         let image = Tga::from_bytes(&tga)?;
         let png = image.to_png()?;
 
@@ -110,8 +120,10 @@ pub fn extract(project: &mut Project, files: &GameFiles) -> Result<()> {
 pub fn inject(project: &mut Project, files: &mut GameFiles) -> Result<()> {
     project.open_file("report_card.toml", |data| {
         let report_cards: BTreeMap<String, ReportCard> = toml::de::from_slice(&data)?;
-        
-        let pak = files.dr2_data_us.read_file("Dr2/data/us/bin/bin_progress_font_l.pak")?;
+
+        let pak = files
+            .dr2_data_us
+            .read_file("Dr2/data/us/bin/bin_progress_font_l.pak")?;
         let mut pak = Pak::from_bytes(&pak)?;
 
         let mut e8 = Pak::from_bytes(&pak.entries[8])?;
@@ -124,30 +136,25 @@ pub fn inject(project: &mut Project, files: &mut GameFiles) -> Result<()> {
 
             e16.entries[i] = Cow::Owned(encode_utf16(&report_card.name)?);
             e16.entries[STUDENT_COUNT + i] = Cow::Owned(encode_utf16(&report_card.height)?);
-            e16.entries[2*STUDENT_COUNT + i] = Cow::Owned(encode_utf16(&report_card.weight)?);
-            e16.entries[3*STUDENT_COUNT + i] = Cow::Owned(encode_utf16(&report_card.chest)?);
-            e16.entries[4*STUDENT_COUNT + i] = Cow::Owned(encode_utf16(&report_card.blood_type)?);
-            e16.entries[5*STUDENT_COUNT + i] = Cow::Owned(encode_utf16(&report_card.birthday)?);
-            e16.entries[6*STUDENT_COUNT + i] = Cow::Owned(encode_utf16(&report_card.likes)?);
-            e16.entries[7*STUDENT_COUNT + i] = Cow::Owned(encode_utf16(&report_card.dislikes)?);
+            e16.entries[2 * STUDENT_COUNT + i] = Cow::Owned(encode_utf16(&report_card.weight)?);
+            e16.entries[3 * STUDENT_COUNT + i] = Cow::Owned(encode_utf16(&report_card.chest)?);
+            e16.entries[4 * STUDENT_COUNT + i] = Cow::Owned(encode_utf16(&report_card.blood_type)?);
+            e16.entries[5 * STUDENT_COUNT + i] = Cow::Owned(encode_utf16(&report_card.birthday)?);
+            e16.entries[6 * STUDENT_COUNT + i] = Cow::Owned(encode_utf16(&report_card.likes)?);
+            e16.entries[7 * STUDENT_COUNT + i] = Cow::Owned(encode_utf16(&report_card.dislikes)?);
 
             e8.entries[i] = Cow::Owned(encode_utf16(&report_card.ultimate[0])?);
             e8.entries[STUDENT_COUNT + i] = Cow::Owned(encode_utf16(&report_card.ultimate[1])?);
-            e8.entries[2*STUDENT_COUNT + i] = Cow::Owned(encode_utf16(&report_card.ultimate[2])?);
+            e8.entries[2 * STUDENT_COUNT + i] = Cow::Owned(encode_utf16(&report_card.ultimate[2])?);
 
             if i > 0 {
                 let summaries = report_card.fte_summaries.as_ref().unwrap();
 
-                e9.entries[(i-1)*5] =
-                    Cow::Owned(encode_utf16(&summaries[0])?);
-                e9.entries[(i-1)*5 + 1] =
-                    Cow::Owned(encode_utf16(&summaries[1])?);
-                e9.entries[(i-1)*5 + 2] =
-                    Cow::Owned(encode_utf16(&summaries[2])?);
-                e9.entries[(i-1)*5 + 3] =
-                    Cow::Owned(encode_utf16(&summaries[3])?);
-                e9.entries[(i-1)*5 + 4] =
-                    Cow::Owned(encode_utf16(&summaries[4])?);
+                e9.entries[(i - 1) * 5] = Cow::Owned(encode_utf16(&summaries[0])?);
+                e9.entries[(i - 1) * 5 + 1] = Cow::Owned(encode_utf16(&summaries[1])?);
+                e9.entries[(i - 1) * 5 + 2] = Cow::Owned(encode_utf16(&summaries[2])?);
+                e9.entries[(i - 1) * 5 + 3] = Cow::Owned(encode_utf16(&summaries[3])?);
+                e9.entries[(i - 1) * 5 + 4] = Cow::Owned(encode_utf16(&summaries[4])?);
             }
         }
 
@@ -159,12 +166,16 @@ pub fn inject(project: &mut Project, files: &mut GameFiles) -> Result<()> {
         pak.entries[9] = Cow::Owned(e9);
         pak.entries[16] = Cow::Owned(e16);
 
-        files.dr2_data_us.inject_file("Dr2/data/us/bin/bin_progress_font_l.pak", &pak.repack()?)?;
+        files
+            .dr2_data_us
+            .inject_file("Dr2/data/us/bin/bin_progress_font_l.pak", &pak.repack()?)?;
 
         Ok(())
     })?;
 
-    let pak = files.dr2_data_keyboard_us.read_file("Dr2/data/us/bin/bin_pb_report_l.pak")?;
+    let pak = files
+        .dr2_data_keyboard_us
+        .read_file("Dr2/data/us/bin/bin_pb_report_l.pak")?;
     let mut pak = Pak::from_bytes(&pak)?;
     let mut modified = false;
 
@@ -175,7 +186,7 @@ pub fn inject(project: &mut Project, files: &mut GameFiles) -> Result<()> {
         project.open_file(&format!("report_card/names/{:02}.png", i), |data| {
             let tga = Tga::from_png(&data)?;
 
-            e2.entries[20-i] = Cow::Owned(tga);
+            e2.entries[20 - i] = Cow::Owned(tga);
 
             modified = true;
             Ok(())
@@ -189,7 +200,7 @@ pub fn inject(project: &mut Project, files: &mut GameFiles) -> Result<()> {
         project.open_file(&format!("report_card/icons/{:02}.png", i), |data| {
             let entry_index = match i {
                 0 => 11,
-                _ => 29-i,
+                _ => 29 - i,
             };
 
             let tga = Tga::from_png(&data)?;
@@ -206,7 +217,9 @@ pub fn inject(project: &mut Project, files: &mut GameFiles) -> Result<()> {
         let e3 = e3.repack()?;
         pak.entries[2] = Cow::Owned(e2);
         pak.entries[3] = Cow::Owned(e3);
-        files.dr2_data_keyboard_us.inject_file("Dr2/data/us/bin/bin_pb_report_l.pak", &pak.repack()?)?;
+        files
+            .dr2_data_keyboard_us
+            .inject_file("Dr2/data/us/bin/bin_pb_report_l.pak", &pak.repack()?)?;
     }
 
     // PICTURES
@@ -214,7 +227,10 @@ pub fn inject(project: &mut Project, files: &mut GameFiles) -> Result<()> {
         project.open_file(&format!("report_card/pictures/{:02}.png", i), |data| {
             let tga = Tga::from_png(&data)?;
 
-            files.dr2_data.inject_file(&format!("Dr2/data/all/cg/report/tsushimbo_chara_{:03}.tga", i), &tga)?;
+            files.dr2_data.inject_file(
+                &format!("Dr2/data/all/cg/report/tsushimbo_chara_{:03}.tga", i),
+                &tga,
+            )?;
 
             Ok(())
         })?;

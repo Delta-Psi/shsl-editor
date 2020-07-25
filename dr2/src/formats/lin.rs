@@ -25,15 +25,18 @@ impl Lin {
             instructions.push(instr);
             slice = &slice[size..];
         }
-        
+
         let strings = match pak.entries.get(1) {
             Some(strings) => {
                 let strings_pak = Pak::from_bytes(&strings)?;
-                Some(strings_pak.entries.iter()
-                    .map(|entry| crate::decode_utf16(&entry))
-                    .collect::<Result<Vec<_>>>()?
+                Some(
+                    strings_pak
+                        .entries
+                        .iter()
+                        .map(|entry| crate::decode_utf16(&entry))
+                        .collect::<Result<Vec<_>>>()?,
                 )
-            },
+            }
             None => None,
         };
 

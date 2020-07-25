@@ -33,13 +33,13 @@ pub fn decode_utf16(data: &[u8]) -> errors::Result<String> {
     use byteorder::{ByteOrder, LE};
     use error_chain::bail;
 
-    if &data[0..2] != &[0xff, 0xfe] {
+    if data[0..2] != [0xff, 0xfe] {
         bail!("couldn't find BOM");
     }
     let utf8 = &data[2..];
 
     let mut utf16 = vec![0; utf8.len() / 2];
-    LE::read_u16_into(&utf8[0..utf16.len()*2], &mut utf16);
+    LE::read_u16_into(&utf8[0..utf16.len() * 2], &mut utf16);
 
     // find zero terminator
     let i = match utf16.iter().enumerate().find(|(_, &v)| v == 0) {

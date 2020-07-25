@@ -1,11 +1,11 @@
-use std::path::{Path, PathBuf};
-use std::collections::HashMap;
-use crate::formats::wad::Wad;
 use crate::errors::*;
+use crate::formats::wad::Wad;
 use error_chain::bail;
-use relative_path::{RelativePath, RelativePathBuf};
-use serde::{Serialize, Deserialize};
 use log::info;
+use relative_path::{RelativePath, RelativePathBuf};
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::path::{Path, PathBuf};
 
 /// Contains handles to every relevant game file.
 pub struct GameFiles {
@@ -30,8 +30,7 @@ impl GameFiles {
 
 // TODO
 #[derive(Default, Serialize, Deserialize)]
-pub struct ProjectConfig {
-}
+pub struct ProjectConfig {}
 
 pub struct Project {
     base_path: PathBuf,
@@ -93,7 +92,7 @@ impl Project {
     pub fn base_path(&self) -> &Path {
         &self.base_path
     }
-    
+
     pub fn config(&self) -> &ProjectConfig {
         &self.config
     }
@@ -109,21 +108,30 @@ impl Project {
         info!("writing {}", full_path.display());
         std::fs::write(&full_path, data)?;
 
-        self.sync.insert(path.to_owned(), std::fs::metadata(&full_path)?.modified()?);
+        self.sync
+            .insert(path.to_owned(), std::fs::metadata(&full_path)?.modified()?);
         self.update_sync_file()
     }
 
-    pub fn write_toml<P: AsRef<RelativePath>, T: Serialize>(&mut self, path: P, data: &T) -> Result<()> {
+    pub fn write_toml<P: AsRef<RelativePath>, T: Serialize>(
+        &mut self,
+        path: P,
+        data: &T,
+    ) -> Result<()> {
         let string = toml::to_string_pretty(data)?;
         self.write_file(path, &string.as_bytes())
     }
 
     /// Only executes the closure if the file has been edited.
-    pub fn open_file<P: AsRef<RelativePath>, F: FnOnce(&[u8]) -> Result<()>>(&mut self, path: P, func: F) -> Result<()> {
+    pub fn open_file<P: AsRef<RelativePath>, F: FnOnce(&[u8]) -> Result<()>>(
+        &mut self,
+        path: P,
+        func: F,
+    ) -> Result<()> {
         let path = path.as_ref();
         let full_path = path.to_path(&self.base_path);
         let modified = std::fs::metadata(&full_path)?.modified()?;
-        
+
         if let Some(prev) = self.sync.get(path) {
             if *prev < modified {
                 info!("reading {}", full_path.display());
@@ -148,8 +156,8 @@ impl Project {
     }
 }
 
-pub mod music;
 pub mod dialogue;
+pub mod music;
 pub mod report_card;
 
 pub fn extract(project: &mut Project, files: &GameFiles) -> Result<()> {

@@ -1,8 +1,8 @@
 //! Adds some additional functionality to `tinytga`.
 pub use tinytga::*;
 
+use byteorder::{LittleEndian as LE, WriteBytesExt};
 use std::io::prelude::*;
-use byteorder::{WriteBytesExt, LittleEndian as LE};
 
 use crate::errors::*;
 
@@ -37,26 +37,26 @@ impl<'a> TgaExt<'a> for Tga<'a> {
 
                         // fix ordering (BGR to RGB)
                         for i in 0..self.header.color_map_len as usize {
-                            plte.swap(3*i, 3*i+2);
+                            plte.swap(3 * i, 3 * i + 2);
                         }
 
                         encoder.set_palette(plte);
-                    },
+                    }
                     32 => {
                         // split the color map into PLTE (color) and tRNS (alpha) chunks
-                        let mut plte = Vec::with_capacity(self.header.color_map_len as usize*3);
+                        let mut plte = Vec::with_capacity(self.header.color_map_len as usize * 3);
                         let mut trns = Vec::with_capacity(self.header.color_map_len as usize);
 
                         for i in 0..self.header.color_map_len as usize {
-                            plte.push(color_map[4*i+2]);
-                            plte.push(color_map[4*i+1]);
-                            plte.push(color_map[4*i  ]);
-                            trns.push(color_map[4*i+3]);
+                            plte.push(color_map[4 * i + 2]);
+                            plte.push(color_map[4 * i + 1]);
+                            plte.push(color_map[4 * i]);
+                            trns.push(color_map[4 * i + 3]);
                         }
 
                         encoder.set_palette(plte);
                         encoder.set_trns(trns);
-                    },
+                    }
 
                     _ => unimplemented!(),
                 }
@@ -72,19 +72,19 @@ impl<'a> TgaExt<'a> for Tga<'a> {
             0b01 => pixel_data.reverse(),
             0b00 => {
                 // flip rows
-                for row in 0..h/2 {
-                    let opposite = h-1-row;
+                for row in 0..h / 2 {
+                    let opposite = h - 1 - row;
                     for col in 0..w {
-                        pixel_data.swap(row*w+col, opposite*w+col);
+                        pixel_data.swap(row * w + col, opposite * w + col);
                     }
                 }
-            },
+            }
             0b11 => {
                 // flip columns
                 for row in 0..h {
-                    for col in 0..w/2 {
-                        let opposite = w-1-col;
-                        pixel_data.swap(row*w+col, row*w+opposite);
+                    for col in 0..w / 2 {
+                        let opposite = w - 1 - col;
+                        pixel_data.swap(row * w + col, row * w + opposite);
                     }
                 }
             }
@@ -93,7 +93,7 @@ impl<'a> TgaExt<'a> for Tga<'a> {
         }
 
         let mut writer = encoder.write_header()?;
-        writer.write_image_data(&pixel_data[0..w*h*(self.header.pixel_depth/8) as usize])?;
+        writer.write_image_data(&pixel_data[0..w * h * (self.header.pixel_depth / 8) as usize])?;
         drop(writer);
 
         Ok(buf.into_inner())
@@ -118,7 +118,7 @@ impl<'a> TgaExt<'a> for Tga<'a> {
 
         // write header
         writer.write_u8(0)?; // image ID field: blank
-        
+
         let color_map;
         if info.color_type == png::ColorType::Indexed {
             writer.write_u8(1)?; // color map type: present
@@ -126,7 +126,7 @@ impl<'a> TgaExt<'a> for Tga<'a> {
             writer.write_u16::<LE>(0)?; // color map offset
 
             let palette = info.palette.as_ref().unwrap();
-            let color_map_len = palette.len()/3;
+            let color_map_len = palette.len() / 3;
             if color_map_len > 256 {
                 unimplemented!("multibyte palette indices");
             }
@@ -136,12 +136,12 @@ impl<'a> TgaExt<'a> for Tga<'a> {
                 writer.write_u8(32)?; // color map depth
 
                 // with transparency; encode as BGRA
-                let mut buf = Vec::with_capacity(color_map_len*4);
+                let mut buf = Vec::with_capacity(color_map_len * 4);
 
                 for i in 0..color_map_len {
-                    buf.push(palette[3*i+2]);
-                    buf.push(palette[3*i+1]);
-                    buf.push(palette[3*i  ]);
+                    buf.push(palette[3 * i + 2]);
+                    buf.push(palette[3 * i + 1]);
+                    buf.push(palette[3 * i]);
                     buf.push(trns[i]);
                 }
 
@@ -150,12 +150,12 @@ impl<'a> TgaExt<'a> for Tga<'a> {
                 writer.write_u8(24)?; // color map depth
 
                 // encode as BGR
-                let mut buf = Vec::with_capacity(palette.len()*3);
+                let mut buf = Vec::with_capacity(palette.len() * 3);
 
                 for i in 0..color_map_len {
-                    buf.push(palette[3*i+2]);
-                    buf.push(palette[3*i+1]);
-                    buf.push(palette[3*i  ]);
+                    buf.push(palette[3 * i + 2]);
+                    buf.push(palette[3 * i + 1]);
+                    buf.push(palette[3 * i]);
                 }
 
                 color_map = Some(buf);
@@ -187,5 +187,5 @@ impl<'a> TgaExt<'a> for Tga<'a> {
         writer.write_all(&pixel_data)?;
 
         Ok(writer.into_inner())
-    } 
+    }
 }

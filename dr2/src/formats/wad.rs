@@ -1,19 +1,19 @@
 //! WAD files are the highest level container for game data.
 
-use std::io::{prelude::*, SeekFrom};
-use std::fs::File;
-use std::path::{Path, PathBuf};
-use std::collections::HashMap;
-use std::cell::RefCell;
 use log::info;
+use std::cell::RefCell;
+use std::collections::HashMap;
+use std::fs::File;
+use std::io::{prelude::*, SeekFrom};
+use std::path::{Path, PathBuf};
 
 use crate::errors::*;
 use error_chain::bail;
 
 pub mod header {
-    use std::io::{prelude::*, SeekFrom, BufReader};
-    use byteorder::{ByteOrder, ReadBytesExt, LittleEndian as LE};
     use super::*;
+    use byteorder::{ByteOrder, LittleEndian as LE, ReadBytesExt};
+    use std::io::{BufReader, SeekFrom};
 
     #[derive(Debug)]
     pub struct Header {
@@ -106,7 +106,7 @@ pub mod header {
                     let mut buf = vec![0; name_length as usize];
                     reader.read_exact(&mut buf)?;
                     let name = String::from_utf8(buf)?;
-                    
+
                     let is_directory = reader.read_u8()? != 0;
 
                     subfiles.push(SubfileEntry {
@@ -157,10 +157,16 @@ impl Wad {
         let header = Header::read_from(&mut file)?;
 
         // construct the path-to-entry-index hashmaps
-        let files = header.files.iter().enumerate()
+        let files = header
+            .files
+            .iter()
+            .enumerate()
             .map(|(i, entry)| (entry.path.clone(), i))
             .collect();
-        let dirs = header.dirs.iter().enumerate()
+        let dirs = header
+            .dirs
+            .iter()
+            .enumerate()
             .map(|(i, entry)| (entry.path.clone(), i))
             .collect();
 
@@ -186,11 +192,20 @@ impl Wad {
         &self.dirs
     }
 
-    pub fn list_dir(&self, path: &'static str, only_files: bool) -> Result<impl Iterator<Item = String>> {
-        let index = *self.dirs.get(path).ok_or_else(|| ErrorKind::UnknownWadDir(path.to_string()))?;
+    pub fn list_dir(
+        &self,
+        path: &'static str,
+        only_files: bool,
+    ) -> Result<impl Iterator<Item = String>> {
+        let index = *self
+            .dirs
+            .get(path)
+            .ok_or_else(|| ErrorKind::UnknownWadDir(path.to_string()))?;
         let entry = &self.header.dirs[index];
 
-        let paths: Vec<_> = entry.subfiles.iter()
+        let paths: Vec<_> = entry
+            .subfiles
+            .iter()
             .filter(|sf| !only_files || !sf.is_directory)
             .map(|sf| {
                 let mut path = path.to_string();
@@ -198,7 +213,7 @@ impl Wad {
                 path.push_str(&sf.name);
                 path
             })
-        .collect();
+            .collect();
 
         Ok(paths.into_iter())
     }
@@ -207,7 +222,10 @@ impl Wad {
     /// returns it in a buffer.
     pub fn read_file(&self, path: &str) -> Result<Vec<u8>> {
         info!("reading {} from {}", path, self.wad_path.display());
-        let index = *self.files.get(path).ok_or_else(|| ErrorKind::UnknownWadFile(path.to_string()))?;
+        let index = *self
+            .files
+            .get(path)
+            .ok_or_else(|| ErrorKind::UnknownWadFile(path.to_string()))?;
         let entry = &self.header.files[index];
         let mut file = self.file.borrow_mut();
 
@@ -224,7 +242,10 @@ impl Wad {
     /// Injects a modified file into the WAD.
     pub fn inject_file(&mut self, path: &str, data: &[u8]) -> Result<()> {
         info!("injecting {} into {}", path, self.wad_path.display());
-        let index = *self.files.get(path).ok_or_else(|| ErrorKind::UnknownWadFile(path.to_string()))?;
+        let index = *self
+            .files
+            .get(path)
+            .ok_or_else(|| ErrorKind::UnknownWadFile(path.to_string()))?;
 
         // reopen the file in write mode
         *self.file.borrow_mut() = std::fs::OpenOptions::new()
@@ -236,12 +257,12 @@ impl Wad {
 
         // before checking for success, reopen in read mode
         *self.file.borrow_mut() = File::open(&self.wad_path)?;
-        
+
         result
     }
 
     fn inject_file_inner(&mut self, index: usize, data: &[u8]) -> Result<()> {
-        use byteorder::{WriteBytesExt, LittleEndian as LE};
+        use byteorder::{LittleEndian as LE, WriteBytesExt};
         let mut file = self.file.borrow_mut();
 
         let header_entry = &mut self.header.files[index];
@@ -249,7 +270,9 @@ impl Wad {
         let new_size = data.len() as u64;
 
         // seek to the offset offset
-        file.seek(SeekFrom::Start(header_entry.entry_offset + 4 + header_entry.path.len() as u64))?;
+        file.seek(SeekFrom::Start(
+            header_entry.entry_offset + 4 + header_entry.path.len() as u64,
+        ))?;
 
         // write new size
         file.write_u64::<LE>(new_size)?;

@@ -1,6 +1,6 @@
 use super::*;
-use serde::Serialize;
 use byteorder::{ByteOrder, LE};
+use serde::Serialize;
 
 pub const SAMPLE_RATE: f32 = 44100.0;
 pub const TRACK_COUNT: usize = 102;
@@ -35,10 +35,13 @@ pub fn extract(project: &mut Project, files: &GameFiles) -> Result<()> {
                 let loop_begin = LE::read_u32(&data[4..8]) as f32 / SAMPLE_RATE;
                 let loop_end = LE::read_u32(&data[8..12]) as f32 / SAMPLE_RATE;
 
-                project.write_toml(format!("music/{:03}.toml", index), &Track {
-                    loop_begin,
-                    loop_end,
-                })?;
+                project.write_toml(
+                    format!("music/{:03}.toml", index),
+                    &Track {
+                        loop_begin,
+                        loop_end,
+                    },
+                )?;
             }
         }
     }

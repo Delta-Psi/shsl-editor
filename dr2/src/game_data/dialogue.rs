@@ -1,12 +1,14 @@
 use super::*;
-use std::collections::BTreeMap;
-use std::borrow::Cow;
-use crate::formats::tga::{Tga, TgaExt};
 use crate::formats::pak::Pak;
+use crate::formats::tga::{Tga, TgaExt};
+use std::borrow::Cow;
+use std::collections::BTreeMap;
 
 pub fn extract(project: &mut Project, files: &GameFiles) -> Result<()> {
     // NAMES (text)
-    let pak = files.dr2_data_us.read_file("Dr2/data/us/bin/bin_progress_font_l.pak")?;
+    let pak = files
+        .dr2_data_us
+        .read_file("Dr2/data/us/bin/bin_progress_font_l.pak")?;
     let pak = Pak::from_bytes(&pak)?;
     let e18 = Pak::from_bytes(&pak.entries[18])?;
 
@@ -19,7 +21,9 @@ pub fn extract(project: &mut Project, files: &GameFiles) -> Result<()> {
     project.write_toml("dialogue/names.toml", &names)?;
 
     // NAMES (images)
-    let pak = files.dr2_data_us.read_file("Dr2/data/us/cg/chara_name.pak")?;
+    let pak = files
+        .dr2_data_us
+        .read_file("Dr2/data/us/cg/chara_name.pak")?;
     let pak = Pak::from_bytes(&pak)?;
 
     for (i, entry) in pak.entries.iter().enumerate() {
@@ -39,7 +43,10 @@ pub fn extract(project: &mut Project, files: &GameFiles) -> Result<()> {
             let string = string.strip_suffix(".tga")?;
             let indices: Vec<_> = string.splitn(2, '_').collect();
 
-            Some((indices[0].parse::<u8>().ok()?, indices[1].parse::<u8>().ok()?))
+            Some((
+                indices[0].parse::<u8>().ok()?,
+                indices[1].parse::<u8>().ok()?,
+            ))
         })();
 
         if let Some((character, sprite)) = result {
@@ -47,7 +54,10 @@ pub fn extract(project: &mut Project, files: &GameFiles) -> Result<()> {
             let image = Tga::from_bytes(&tga)?;
             let png = image.to_png()?;
 
-            project.write_file(format!("dialogue/sprites/{:02}/{:02}.png", character, sprite), &png)?;
+            project.write_file(
+                format!("dialogue/sprites/{:02}/{:02}.png", character, sprite),
+                &png,
+            )?;
         }
     }
 
@@ -57,7 +67,9 @@ pub fn extract(project: &mut Project, files: &GameFiles) -> Result<()> {
 pub fn inject(project: &mut Project, files: &mut GameFiles) -> Result<()> {
     // NAMES (text)
     project.open_file("dialogue/names.toml", |data| {
-        let pak = files.dr2_data_us.read_file("Dr2/data/us/bin/bin_progress_font_l.pak")?;
+        let pak = files
+            .dr2_data_us
+            .read_file("Dr2/data/us/bin/bin_progress_font_l.pak")?;
         let mut pak = Pak::from_bytes(&pak)?;
         let mut e18 = Pak::from_bytes(&pak.entries[18])?;
 
@@ -72,13 +84,17 @@ pub fn inject(project: &mut Project, files: &mut GameFiles) -> Result<()> {
         pak.entries[18] = Cow::Owned(e18);
         let pak = pak.repack()?;
 
-        files.dr2_data_us.inject_file("Dr2/data/us/bin/bin_progress_font_l.pak", &pak)?;
+        files
+            .dr2_data_us
+            .inject_file("Dr2/data/us/bin/bin_progress_font_l.pak", &pak)?;
 
         Ok(())
     })?;
 
     // NAMES (images)
-    let pak = files.dr2_data_us.read_file("Dr2/data/us/cg/chara_name.pak")?;
+    let pak = files
+        .dr2_data_us
+        .read_file("Dr2/data/us/cg/chara_name.pak")?;
     let mut pak = Pak::from_bytes(&pak)?;
     let mut modified = false;
 
@@ -95,7 +111,9 @@ pub fn inject(project: &mut Project, files: &mut GameFiles) -> Result<()> {
 
     if modified {
         let pak = pak.repack()?;
-        files.dr2_data_us.inject_file("Dr2/data/us/cg/chara_name.pak", &pak)?;
+        files
+            .dr2_data_us
+            .inject_file("Dr2/data/us/cg/chara_name.pak", &pak)?;
     }
 
     // SPRITES
@@ -106,17 +124,23 @@ pub fn inject(project: &mut Project, files: &mut GameFiles) -> Result<()> {
             let string = string.strip_suffix(".tga")?;
             let indices: Vec<_> = string.splitn(2, '_').collect();
 
-            Some((indices[0].parse::<u8>().ok()?, indices[1].parse::<u8>().ok()?))
+            Some((
+                indices[0].parse::<u8>().ok()?,
+                indices[1].parse::<u8>().ok()?,
+            ))
         })();
 
         if let Some((character, sprite)) = result {
-            project.open_file(format!("dialogue/sprites/{:02}/{:02}.png", character, sprite), |data| {
-                let tga = Tga::from_png(&data)?;
+            project.open_file(
+                format!("dialogue/sprites/{:02}/{:02}.png", character, sprite),
+                |data| {
+                    let tga = Tga::from_png(&data)?;
 
-                files.dr2_data.inject_file(&wad_path, &tga)?;
+                    files.dr2_data.inject_file(&wad_path, &tga)?;
 
-                Ok(())
-            })?;
+                    Ok(())
+                },
+            )?;
         }
     }
 

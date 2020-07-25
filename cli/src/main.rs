@@ -1,75 +1,90 @@
 #![windows_subsystem = "console"]
 
-pub const VERSION: &'static str = "0.1.0";
+pub const VERSION: &str = "0.1.0";
 
 fn main() {
     std::env::set_var("RUST_LOG", "info");
     pretty_env_logger::init();
 
-    use clap::{App, SubCommand, Arg};
+    use clap::{App, Arg, SubCommand};
 
     let app = App::new("SHSL Editor CLI")
         .version(VERSION)
         .author("Delta-Psi")
         //.setting(AppSettings::SubcommandRequiredElseHelp)
-        .subcommand(SubCommand::with_name("extract")
-            .about("Extracts the game data into a folder")
-            .arg(Arg::with_name("GAME_PATH")
-                .help("path to the game files")
-                .required(true))
-            .arg(Arg::with_name("OUTDIR")
-                .help("output directory")
-                .required(true)))
-        .subcommand(SubCommand::with_name("inject")
-            .arg(Arg::with_name("GAME_PATH")
-                .help("path to the game files")
-                .required(true))
-            .arg(Arg::with_name("INDIR")
-                .help("input directory")
-                .required(true)))
-
-        .subcommand(SubCommand::with_name("wad-list")
-            .about("Lists all files present in a WAD file")
-            .arg(Arg::with_name("WAD")
-                .help("WAD file")
-                .required(true)))
-        .subcommand(SubCommand::with_name("wad-extract")
-            .about("Extracts a single file from a WAD file")
-            .arg(Arg::with_name("WAD")
-                .help("WAD file")
-                .required(true))
-            .arg(Arg::with_name("PATH")
-                .help("inner file path")
-                .required(true))
-            .arg(Arg::with_name("OUTDIR")
-                .help("output directory")
-                .default_value(".")))
-        .subcommand(SubCommand::with_name("wad-inject")
-            .about("Injects a modified file into a WAD file")
-            .arg(Arg::with_name("WAD")
-                .help("WAD file")
-                .required(true))
-            .arg(Arg::with_name("PATH")
-                .help("inner file path")
-                .required(true))
-            .arg(Arg::with_name("INPUT")
-                .help("modified file")
-                .required(true)))
-        .subcommand(SubCommand::with_name("read-lin")
-            .about("Reads a .lin file")
-            .arg(Arg::with_name("LIN")
-                .required(true)))
-
-        .subcommand(SubCommand::with_name("tga-to-png")
-            .arg(Arg::with_name("INPUT")
-                .required(true))
-            .arg(Arg::with_name("OUTPUT")
-                .required(true)))
-        .subcommand(SubCommand::with_name("png-to-tga")
-            .arg(Arg::with_name("INPUT")
-                .required(true))
-            .arg(Arg::with_name("OUTPUT")
-                .required(true)))
+        .subcommand(
+            SubCommand::with_name("extract")
+                .about("Extracts the game data into a folder")
+                .arg(
+                    Arg::with_name("GAME_PATH")
+                        .help("path to the game files")
+                        .required(true),
+                )
+                .arg(
+                    Arg::with_name("OUTDIR")
+                        .help("output directory")
+                        .required(true),
+                ),
+        )
+        .subcommand(
+            SubCommand::with_name("inject")
+                .arg(
+                    Arg::with_name("GAME_PATH")
+                        .help("path to the game files")
+                        .required(true),
+                )
+                .arg(
+                    Arg::with_name("INDIR")
+                        .help("input directory")
+                        .required(true),
+                ),
+        )
+        .subcommand(
+            SubCommand::with_name("wad-list")
+                .about("Lists all files present in a WAD file")
+                .arg(Arg::with_name("WAD").help("WAD file").required(true)),
+        )
+        .subcommand(
+            SubCommand::with_name("wad-extract")
+                .about("Extracts a single file from a WAD file")
+                .arg(Arg::with_name("WAD").help("WAD file").required(true))
+                .arg(
+                    Arg::with_name("PATH")
+                        .help("inner file path")
+                        .required(true),
+                )
+                .arg(
+                    Arg::with_name("OUTDIR")
+                        .help("output directory")
+                        .default_value("."),
+                ),
+        )
+        .subcommand(
+            SubCommand::with_name("wad-inject")
+                .about("Injects a modified file into a WAD file")
+                .arg(Arg::with_name("WAD").help("WAD file").required(true))
+                .arg(
+                    Arg::with_name("PATH")
+                        .help("inner file path")
+                        .required(true),
+                )
+                .arg(Arg::with_name("INPUT").help("modified file").required(true)),
+        )
+        .subcommand(
+            SubCommand::with_name("read-lin")
+                .about("Reads a .lin file")
+                .arg(Arg::with_name("LIN").required(true)),
+        )
+        .subcommand(
+            SubCommand::with_name("tga-to-png")
+                .arg(Arg::with_name("INPUT").required(true))
+                .arg(Arg::with_name("OUTPUT").required(true)),
+        )
+        .subcommand(
+            SubCommand::with_name("png-to-tga")
+                .arg(Arg::with_name("INPUT").required(true))
+                .arg(Arg::with_name("OUTPUT").required(true)),
+        )
         .about("SDR2 PC modding tool");
 
     let matches = app.get_matches();
@@ -99,18 +114,20 @@ fn main() {
                 for path in wad.files().keys() {
                     println!("{}", path);
                 }
-            },
+            }
 
             "wad-extract" => {
+                use dr2::formats::wad;
                 use std::io::prelude::*;
                 use std::path::PathBuf;
-                use dr2::formats::wad;
 
                 let wad_path = matches.value_of("WAD").unwrap();
                 let wad = wad::Wad::open(&wad_path).expect("could not load wad");
 
                 let inner_path = matches.value_of("PATH").unwrap();
-                let data = wad.read_file(&inner_path).expect("could not read inner file");
+                let data = wad
+                    .read_file(&inner_path)
+                    .expect("could not read inner file");
 
                 // extract filename
                 let fname = inner_path.rsplitn(2, '/').next().unwrap();
@@ -119,13 +136,16 @@ fn main() {
                 let mut out_path = PathBuf::from(out_path);
                 out_path.push(&fname);
 
-                let mut output = std::fs::File::create(&out_path).expect("could not create output file");
-                output.write_all(&data).expect("could not write to output file");
-            },
+                let mut output =
+                    std::fs::File::create(&out_path).expect("could not create output file");
+                output
+                    .write_all(&data)
+                    .expect("could not write to output file");
+            }
 
             "wad-inject" => {
-                use std::io::prelude::*;
                 use dr2::formats::wad;
+                use std::io::prelude::*;
 
                 let wad_path = matches.value_of("WAD").unwrap();
                 let mut wad = wad::Wad::open(&wad_path).expect("could not load wad");
@@ -135,9 +155,12 @@ fn main() {
                 let in_path = matches.value_of("INPUT").unwrap();
                 let mut in_file = std::fs::File::open(&in_path).expect("coult not open input file");
                 let mut data = Vec::new();
-                in_file.read_to_end(&mut data).expect("could not read input file");
+                in_file
+                    .read_to_end(&mut data)
+                    .expect("could not read input file");
 
-                wad.inject_file(&inner_path, &data).expect("could not inject data");
+                wad.inject_file(&inner_path, &data)
+                    .expect("could not inject data");
             }
 
             "tga-to-png" => {
@@ -151,7 +174,7 @@ fn main() {
 
                 let output = image.to_png().expect("could not write png");
                 std::fs::write(&output_path, &output).expect("could not write to output");
-            },
+            }
 
             "png-to-tga" => {
                 use dr2::formats::tga::{Tga, TgaExt};
@@ -165,7 +188,7 @@ fn main() {
                 Tga::from_bytes(&data).expect("invalid tga generated");
 
                 std::fs::write(output_path, &data).expect("could not write output");
-            },
+            }
 
             "read-lin" => {
                 use dr2::formats::lin::Lin;
@@ -214,11 +237,9 @@ fn main() {
                 stdin.read_line(&mut projdir).unwrap();
 
                 if choice == "extract" {
-                    extract(game_path.trim(),
-                    projdir.trim())?;
+                    extract(game_path.trim(), projdir.trim())?;
                 } else {
-                    inject(game_path.trim(),
-                    projdir.trim())?;
+                    inject(game_path.trim(), projdir.trim())?;
                 }
 
                 println!("Finished!");

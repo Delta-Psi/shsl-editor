@@ -1,7 +1,7 @@
+use byteorder::{ReadBytesExt, WriteBytesExt, LE};
+use std::borrow::Cow;
 use std::io::prelude::*;
 use std::io::{BufReader, Cursor};
-use std::borrow::Cow;
-use byteorder::{ReadBytesExt, WriteBytesExt, LE};
 
 use crate::errors::*;
 use error_chain::bail;
@@ -23,14 +23,12 @@ impl Header {
             offsets.push(offset);
 
             // ensure offsets are ascending
-            if i > 0 && offsets[i-1] >= offset {
+            if i > 0 && offsets[i - 1] >= offset {
                 bail!(ErrorKind::InvalidPakOffset);
             }
         }
 
-        Ok(Self {
-            offsets,
-        })
+        Ok(Self { offsets })
     }
 }
 
@@ -54,7 +52,7 @@ impl<'a> Pak<'a> {
 
         for i in 0..count {
             let begin = offsets[i] as usize;
-            let end = offsets[i+1] as usize;
+            let end = offsets[i + 1] as usize;
 
             entries.push(data[begin..end].into());
         }
@@ -68,14 +66,14 @@ impl<'a> Pak<'a> {
         let mut buf = std::io::Cursor::new(Vec::new());
 
         buf.write_u32::<LE>(self.entries.len() as u32)?;
-        let mut offset: usize = 4 + self.entries.len()*4;
+        let mut offset: usize = 4 + self.entries.len() * 4;
         for entry in self.entries.iter() {
             buf.write_u32::<LE>(offset as u32)?;
             offset += entry.len();
         }
 
         for entry in self.entries.iter() {
-            buf.write(&entry)?;
+            buf.write_all(&entry)?;
         }
 
         Ok(buf.into_inner())
