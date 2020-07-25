@@ -1,3 +1,4 @@
+use std::fmt::Write;
 use crate::errors::*;
 use crate::formats::pak::Pak;
 
@@ -44,5 +45,18 @@ impl Lin {
             instructions,
             strings,
         })
+    }
+
+    /// Converts this .lin to the custom .script format.
+    pub fn to_script(&self) -> Result<String> {
+        let mut result = String::new();
+
+        writeln!(result, "#game dr2")?;
+
+        for instr in &self.instructions {
+            instr.write_as_script(&mut result, &self)?;
+        }
+
+        Ok(result)
     }
 }

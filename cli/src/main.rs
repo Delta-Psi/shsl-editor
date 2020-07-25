@@ -197,13 +197,9 @@ fn main() {
                 let input = std::fs::read(&input_path).expect("could not read input");
 
                 let lin = Lin::from_bytes(&input).expect("could not read lin");
+                let script = lin.to_script().expect("could not convert to script");
 
-                for instr in lin.instructions {
-                    println!("{:x?}", instr);
-                }
-                if let Some(strings) = lin.strings {
-                    println!("{:#?}", strings);
-                }
+                print!("{}", script);
             }
 
             _ => unreachable!(),

@@ -1,3 +1,4 @@
+use std::fmt::Write;
 use crate::errors::*;
 use byteorder::{ByteOrder, BE, LE};
 use log::warn;
@@ -15,13 +16,13 @@ const ARGUMENT_LENGTHS: &[u8] = &[
 pub enum Instr {
     TextCount(u16),
     Text(u16),
-    Format(u8),
+    //Format(u8),
 
-    EndOfJump(u16),
-    StartOfJump(u16),
+    //EndOfJump(u16),
+    //StartOfJump(u16),
 
-    WaitForInput,
-    WaitFrame,
+    //WaitForInput,
+    //WaitFrame,
 
     Unknown(u8, Vec<u8>),
     Raw(u8),
@@ -42,13 +43,13 @@ impl Instr {
         Ok(match data[1] {
             0x00 => (TextCount(LE::read_u16(&data[2..4])), 4),
             0x02 => (Text(BE::read_u16(&data[2..4])), 4),
-            0x03 => (Format(data[2]), 3),
+            //0x03 => (Format(data[2]), 3),
 
-            0x2c => (EndOfJump(BE::read_u16(&data[2..4])), 4),
-            0x3b => (StartOfJump(BE::read_u16(&data[2..4])), 4),
+            //0x2c => (EndOfJump(BE::read_u16(&data[2..4])), 4),
+            //0x3b => (StartOfJump(BE::read_u16(&data[2..4])), 4),
 
-            0x4b => (WaitForInput, 2),
-            0x4c => (WaitFrame, 2),
+            //0x4b => (WaitForInput, 2),
+            //0x4c => (WaitFrame, 2),
 
             op @ 0x4e..=0xff => {
                 warn!("invalid opcode {:x}", op);
@@ -63,5 +64,29 @@ impl Instr {
                 )
             }
         })
+    }
+
+    pub fn write_as_script<W: Write>(&self, writer: &mut W, lin: &super::Lin) -> Result<()> {
+        use Instr::*;
+
+        match self {
+            TextCount(_count) => (), // ingnore this one, it'll be added automatically
+            Text(index) => {
+                writeln!(writer, "dialogue_text \"{}\"", lin.strings.as_ref().unwrap()[*index as usize].escape_default())?;
+            },
+
+            Unknown(opcode, args) => {
+                write!(writer, "raw 0x70 0x{:02x}", opcode)?;
+                for byte in args.iter() {
+                    write!(writer, " 0x{:02x}", byte)?;
+                }
+                writeln!(writer)?;
+            },
+            Raw(byte) => {
+                writeln!(writer, "raw 0x{:02x}", byte)?;
+            }
+        }
+
+        Ok(())
     }
 }

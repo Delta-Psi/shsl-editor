@@ -7,6 +7,7 @@ pub mod errors {
     error_chain! {
         foreign_links {
             Io(std::io::Error);
+            Fmt(std::fmt::Error);
             InvalidUtf8String(std::string::FromUtf8Error);
             InvalidUtf16String(std::string::FromUtf16Error);
             PngDecoding(png::DecodingError);
