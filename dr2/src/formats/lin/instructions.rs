@@ -1,5 +1,20 @@
 use crate::errors::*;
 use byteorder::{ByteOrder, LE, BE};
+use log::warn;
+
+// from 0xa72980
+const ARGUMENT_LENGTHS: &[u8] = &[
+    0x02,   0x04,   0x02,   0x01,   0x04,   0x02,   0x08,   0x05,
+    0x05,   0x03,   0x03,   0x02,   0x02,   0x03,   0x02,   0x03,
+    0x03,   0x04,   0x02,   0x02,   0x06,   0x04,   0x02,   0x0e,
+    0x0e,   0x05,   0x00,   0x05,   0x00,   0x00,   0x05,   0x07,
+    0x05,   0x01,   0x03,   0x05,   0x04,   0x02,   0x03,   0x01,
+    0x04,   0x0d,   0x0c,   0x01,   0x02,   0x0c,   0x05,   0x02,
+    0x02,   0x00,   0x01,   0x04,   0x03,   0x02,   0x01,   0x03,
+    0x02,   0x02,   0x04,   0x02,   0x04,   0x05,   0x02,   0x00,
+    0x00,   0x00,   0x00,   0x00,   0x00,   0x00,   0x00,   0x00,
+    0x00,   0x00,   0x00,   0x00,   0x00,   0x00,
+];
 
 #[derive(Debug)]
 pub enum Instr {
@@ -23,6 +38,7 @@ impl Instr {
 
         // TODO: port this over from disassembly (0x57bd70/0x57bda0)
         if data[0] != 0x70 {
+            warn!("unknown opcode marker {}; stopping", data[0]);
             return Ok(None);
         }
 
@@ -37,11 +53,14 @@ impl Instr {
             0x4b => (WaitForInput, 2),
             0x4c => (WaitFrame, 2),
 
-            _ => {
-                match data[2..].iter().enumerate().find(|(_, v)| **v == 0x70) {
-                    None => (Unknown(data[1], data[2..].to_owned()), data.len()),
-                    Some((i, _)) => (Unknown(data[1], data[2..i+2].to_owned()), i+2),
-                }
+            op @ 0x4e..=0xff => {
+                warn!("invalid opcode {}; stopping", op);
+                return Ok(None);
+            },
+
+            op => {
+                let arg_length = ARGUMENT_LENGTHS[op as usize] as usize;
+                (Unknown(op, data[2..2+arg_length].to_owned()), 2+arg_length)
             }
         }))
     }
