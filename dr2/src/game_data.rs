@@ -156,11 +156,13 @@ impl Project {
     }
 }
 
+pub mod scripts;
 pub mod dialogue;
 pub mod music;
 pub mod report_card;
 
 pub fn extract(project: &mut Project, files: &GameFiles) -> Result<()> {
+    scripts::extract(project, files)?;
     report_card::extract(project, files)?;
     dialogue::extract(project, files)?;
     music::extract(project, files)?;
