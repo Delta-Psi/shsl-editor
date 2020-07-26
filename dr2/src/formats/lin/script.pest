@@ -4,9 +4,9 @@ COMMENT = _{
 	("//" ~ (!NEWLINE ~ ANY)*)
 }
 
-ident = @{ ASCII_ALPHA ~ ASCII_ALPHANUMERIC* }
+ident = @{ (ASCII_ALPHA | "_") ~ (ASCII_ALPHANUMERIC | "_")* }
 int_hex = @{ "0x" ~ ASCII_HEX_DIGIT+ }
-int_dec = @{ ASCII_NONZERO_DIGIT ~ ASCII_DIGIT* }
+int_dec = @{ "0" | (ASCII_NONZERO_DIGIT ~ ASCII_DIGIT*) }
 
 text = ${ "`\n" ~ text_inner ~ "`" }
 text_inner = @{ text_char+ }
@@ -17,6 +17,6 @@ text_char = {
 
 arg = { ident | int_hex | int_dec | text }
 
-instruction = { ident ~ (arg ~ ("," ~ arg)*)? ~ "\n" }
+instr = { ident ~ (arg ~ ("," ~ arg)*)? ~ "\n" }
 
-script = { instruction* }
+script = { SOI ~ instr* ~ EOI }

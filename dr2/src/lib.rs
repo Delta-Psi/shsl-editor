@@ -14,6 +14,7 @@ pub mod errors {
             PngEncoding(png::EncodingError);
             TomlSerialize(toml::ser::Error);
             TomlDeserialize(toml::de::Error);
+            ScriptParse(pest::error::Error<crate::formats::lin::script_parser::Rule>);
         }
 
         errors {

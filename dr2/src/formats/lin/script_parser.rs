@@ -1,4 +1,31 @@
 use pest_derive::Parser;
+use crate::errors::*;
+
+pub enum Arg<'a> {
+    Ident(&'a str),
+    Int(i64),
+    Text(&'a str),
+}
+
+pub struct Instr<'a> {
+    pub operation: &'a str,
+    pub args: Vec<Arg<'a>>,
+}
+
+pub struct Script<'a> {
+    pub instrs: Vec<Instr<'a>>,
+}
+
+pub fn parse(input: &str) -> Result<()> {
+    use pest::Parser;
+    let result = ScriptParser::parse(Rule::script, input)?;
+
+    for instr in result {
+        println!("{:?}", instr);
+    }
+
+    Ok(())
+}
 
 #[derive(Parser)]
 #[grammar = "formats/lin/script.pest"]

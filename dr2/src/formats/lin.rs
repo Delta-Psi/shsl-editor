@@ -52,7 +52,7 @@ impl Lin {
     pub fn to_script(&self) -> Result<String> {
         let mut result = String::new();
 
-        writeln!(result, "#game dr2")?;
+        //writeln!(result, "#game dr2")?;
 
         for instr in &self.instructions {
             instr.write_as_script(&mut result, &self)?;

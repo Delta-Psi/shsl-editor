@@ -115,9 +115,9 @@ impl Instr {
             },
 
             Unknown(opcode, args) => {
-                write!(writer, "raw 0x70 0x{:02x}", opcode)?;
+                write!(writer, "raw 0x70, 0x{:02x}", opcode)?;
                 for byte in args.iter() {
-                    write!(writer, " 0x{:02x}", byte)?;
+                    write!(writer, ", 0x{:02x}", byte)?;
                 }
                 writeln!(writer)?;
             },
