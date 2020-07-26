@@ -1,0 +1,22 @@
+WHITESPACE = _{ " " | "\t" }
+COMMENT = _{
+	("/*" ~ (!"*/" ~ ANY)* ~ "*/") |
+	("//" ~ (!NEWLINE ~ ANY)*)
+}
+
+ident = @{ ASCII_ALPHA ~ ASCII_ALPHANUMERIC* }
+int_hex = @{ "0x" ~ ASCII_HEX_DIGIT+ }
+int_dec = @{ ASCII_NONZERO_DIGIT ~ ASCII_DIGIT* }
+
+text = ${ "`\n" ~ text_inner ~ "`" }
+text_inner = @{ text_char+ }
+text_char = {
+	(!("`" | "\\") ~ ANY) |
+	("\\" ~ ("\\" | "t" | "`"))
+}
+
+arg = { ident | int_hex | int_dec | text }
+
+instruction = { ident ~ (arg ~ ("," ~ arg)*)? ~ "\n" }
+
+script = { instruction* }

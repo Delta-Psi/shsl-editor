@@ -4,6 +4,7 @@ use crate::formats::pak::Pak;
 
 mod instructions;
 use instructions::*;
+pub mod script_parser;
 
 #[derive(Debug)]
 pub struct Lin {
