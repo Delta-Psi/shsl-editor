@@ -15,8 +15,14 @@ const ARGUMENT_LENGTHS: &[u8] = &[
 #[derive(Debug)]
 pub enum Instr {
     TextCount(u16),
+
+    Format(u8),
+    UI(u8, u8),
+ 
+    Sprite(u8, u8, u8, u8, u8),
+    Speaker(u8),
+    Voice(u8, u8, u16, u8),
     Text(u16),
-    //Format(u8),
 
     //EndOfJump(u16),
     //StartOfJump(u16),
@@ -43,7 +49,13 @@ impl Instr {
         Ok(match data[1] {
             0x00 => (TextCount(LE::read_u16(&data[2..4])), 4),
             0x02 => (Text(BE::read_u16(&data[2..4])), 4),
-            //0x03 => (Format(data[2]), 3),
+            0x03 => (Format(data[2]), 3),
+            0x08 => (Voice(data[2], data[3], BE::read_u16(&data[4..6]), data[6]), 7),
+
+            0x1e => (Sprite(data[2], data[3], data[4], data[5], data[6]), 7),
+
+            0x21 => (Speaker(data[2]), 3),
+            0x25 => (UI(data[2], data[3]), 4),
 
             //0x2c => (EndOfJump(BE::read_u16(&data[2..4])), 4),
             //0x3b => (StartOfJump(BE::read_u16(&data[2..4])), 4),
@@ -70,9 +82,36 @@ impl Instr {
         use Instr::*;
 
         match self {
-            TextCount(_count) => (), // ingnore this one, it'll be added automatically
+            TextCount(_count) => {
+                writeln!(writer, "text_count auto")?;
+            },
+
             Text(index) => {
-                writeln!(writer, "dialogue_text \"{}\"", lin.strings.as_ref().unwrap()[*index as usize].escape_default())?;
+                write!(writer, "text ")?;
+                super::write_escaped(writer, &lin.strings.as_ref().unwrap()[*index as usize])?;
+                writeln!(writer)?;
+            },
+            Speaker(character) => {
+                writeln!(writer, "speaker {}", character)?;
+            },
+            Voice(character, chapter, line, volume) => {
+                writeln!(writer, "voice {}, {}, {}, {}", character, chapter, line, volume)?;
+            },
+            Sprite(position, character, sprite, state, transition) => {
+                writeln!(writer, "sprite {}, {}, {}, {}, {}",
+                    position, character, sprite, state, transition)?;
+            },
+            
+            Format(format) => {
+                writeln!(writer, "format {}", format)?;
+            },
+            UI(element, state) => {
+                write!(writer, "ui {}, ", element)?;
+                match state {
+                    0 => writeln!(writer, "disable")?,
+                    1 => writeln!(writer, "enable")?,
+                    _ => writeln!(writer, "{}", state)?,
+                }
             },
 
             Unknown(opcode, args) => {

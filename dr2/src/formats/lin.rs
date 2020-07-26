@@ -60,3 +60,20 @@ impl Lin {
         Ok(result)
     }
 }
+
+fn write_escaped<W: Write>(writer: &mut W, str: &str) -> Result<()> {
+    writeln!(writer, "`")?;
+    for c in str.chars() {
+        match c {
+            '\\' => write!(writer, "\\\\")?,
+            '\t' => write!(writer, "\\t")?,
+            '`' => write!(writer, "\\`")?,
+            '\n' => write!(writer, "\n")?,
+            '\x20'..='\x7e' => write!(writer, "{}", c)?,
+            _ => write!(writer, "{}", c.escape_unicode())?,
+        }
+    }
+    write!(writer, "`")?;
+
+    Ok(())
+}
