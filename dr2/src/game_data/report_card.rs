@@ -119,7 +119,8 @@ pub fn extract(project: &mut Project, files: &GameFiles) -> Result<()> {
 
 pub fn inject(project: &mut Project, files: &mut GameFiles) -> Result<()> {
     project.open_file("report_card.toml", |data| {
-        let report_cards: BTreeMap<String, ReportCard> = toml::de::from_slice(&data)?;
+        let report_cards: BTreeMap<String, ReportCard> = toml::de::from_slice(&data)
+            .chain_err(|| "could not deserialize report_card.toml")?;
 
         let pak = files
             .dr2_data_us

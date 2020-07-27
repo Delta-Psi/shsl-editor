@@ -8,13 +8,6 @@ pub mod errors {
         foreign_links {
             Io(std::io::Error);
             Fmt(std::fmt::Error);
-            InvalidUtf8String(std::string::FromUtf8Error);
-            InvalidUtf16String(std::string::FromUtf16Error);
-            PngDecoding(png::DecodingError);
-            PngEncoding(png::EncodingError);
-            TomlSerialize(toml::ser::Error);
-            TomlDeserialize(toml::de::Error);
-            ScriptParse(pest::error::Error<crate::formats::lin::script_parser::Rule>);
         }
 
         errors {
@@ -34,6 +27,7 @@ pub mod errors {
 pub fn decode_utf16(data: &[u8]) -> errors::Result<String> {
     use byteorder::{ByteOrder, LE};
     use error_chain::bail;
+    use errors::*;
 
     if data[0..2] != [0xff, 0xfe] {
         bail!("couldn't find BOM");
@@ -50,7 +44,7 @@ pub fn decode_utf16(data: &[u8]) -> errors::Result<String> {
     };
     let utf16 = &utf16[0..i];
 
-    Ok(String::from_utf16(&utf16)?)
+    Ok(String::from_utf16(&utf16).chain_err(|| "string is not valid UTF-16")?)
 }
 
 pub fn encode_utf16(string: &str) -> errors::Result<Vec<u8>> {

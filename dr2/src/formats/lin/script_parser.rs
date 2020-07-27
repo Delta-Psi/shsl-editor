@@ -21,7 +21,8 @@ pub struct Script<'a> {
 
 pub fn parse(input: &str) -> Result<Script> {
     use pest::Parser;
-    let mut result = ScriptParser::parse(Rule::script, input)?;
+    let mut result = ScriptParser::parse(Rule::script, input)
+        .chain_err(|| "could not parse script")?;
     let instrs: Vec<_> = result.next().unwrap()
         .into_inner()
         .filter(|p| p.as_rule() == Rule::instr)

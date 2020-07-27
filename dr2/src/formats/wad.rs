@@ -72,7 +72,8 @@ pub mod header {
                 let path_length = reader.read_u32::<LE>()?;
                 let mut buf = vec![0; path_length as usize];
                 reader.read_exact(&mut buf)?;
-                let path = String::from_utf8(buf)?;
+                let path = String::from_utf8(buf)
+                    .chain_err(|| "file path is not valif UTF-8")?;
 
                 let size = reader.read_u64::<LE>()?;
                 let offset = reader.read_u64::<LE>()?;
@@ -94,7 +95,8 @@ pub mod header {
                 let path_length = reader.read_u32::<LE>()?;
                 let mut buf = vec![0; path_length as usize];
                 reader.read_exact(&mut buf)?;
-                let path = String::from_utf8(buf)?;
+                let path = String::from_utf8(buf)
+                    .chain_err(|| "directory path is not valid UTF-8")?;
 
                 let subfile_count = reader.read_u32::<LE>()?;
                 let mut subfiles = Vec::with_capacity(subfile_count as usize);
@@ -105,7 +107,8 @@ pub mod header {
                     let name_length = reader.read_u32::<LE>()?;
                     let mut buf = vec![0; name_length as usize];
                     reader.read_exact(&mut buf)?;
-                    let name = String::from_utf8(buf)?;
+                    let name = String::from_utf8(buf)
+                        .chain_err(|| "subfile name is not valid UTF-8")?;
 
                     let is_directory = reader.read_u8()? != 0;
 

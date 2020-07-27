@@ -73,7 +73,8 @@ pub fn inject(project: &mut Project, files: &mut GameFiles) -> Result<()> {
         let mut pak = Pak::from_bytes(&pak)?;
         let mut e18 = Pak::from_bytes(&pak.entries[18])?;
 
-        let names: BTreeMap<String, String> = toml::de::from_slice(&data)?;
+        let names: BTreeMap<String, String> = toml::de::from_slice(&data)
+            .chain_err(|| "could not deserialize dialogue/names.toml")?;
         for (i, entry) in e18.entries.iter_mut().enumerate() {
             let name = &names[&format!("{:02}", i)];
             let name = crate::encode_utf16(name)?;

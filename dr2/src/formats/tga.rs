@@ -92,8 +92,10 @@ impl<'a> TgaExt<'a> for Tga<'a> {
             _ => unimplemented!(),
         }
 
-        let mut writer = encoder.write_header()?;
-        writer.write_image_data(&pixel_data[0..w * h * (self.header.pixel_depth / 8) as usize])?;
+        let mut writer = encoder.write_header()
+            .chain_err(|| "could not write PNG header")?;
+        writer.write_image_data(&pixel_data[0..w * h * (self.header.pixel_depth / 8) as usize])
+            .chain_err(|| "could not write PNG pixel data")?;
         drop(writer);
 
         Ok(buf.into_inner())
@@ -103,10 +105,12 @@ impl<'a> TgaExt<'a> for Tga<'a> {
         let reader = std::io::Cursor::new(data);
         let mut decoder = png::Decoder::new(reader);
         decoder.set_transformations(png::Transformations::IDENTITY);
-        let (info, mut reader) = decoder.read_info()?;
+        let (info, mut reader) = decoder.read_info()
+            .chain_err(|| "could not read PNG info")?;
 
         let mut pixel_data = vec![0; info.buffer_size()];
-        reader.next_frame(&mut pixel_data)?;
+        reader.next_frame(&mut pixel_data)
+            .chain_err(|| "could not read PNG pixel data")?;
 
         let info = reader.info();
 

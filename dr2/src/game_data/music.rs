@@ -73,7 +73,8 @@ pub fn inject(project: &mut Project, files: &mut GameFiles) -> Result<()> {
                 })?;
             } else {
                 project.open_file(format!("music/{:03}.toml", index), |data| {
-                    let track: Track = toml::de::from_slice(&data)?;
+                    let track: Track = toml::de::from_slice(&data)
+                        .chain_err(|| format!("could not deserialize music/{:03}.toml", index))?;
 
                     let loop_begin = (track.loop_begin * SAMPLE_RATE) as u32;
                     let loop_end = (track.loop_end * SAMPLE_RATE) as u32;
