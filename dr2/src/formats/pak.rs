@@ -33,7 +33,7 @@ impl Header {
 }
 
 pub struct Pak<'a> {
-    pub entries: Box<[Cow<'a, [u8]>]>,
+    pub entries: Vec<Cow<'a, [u8]>>,
 }
 
 impl<'a> Pak<'a> {
@@ -58,7 +58,7 @@ impl<'a> Pak<'a> {
         }
 
         Ok(Pak {
-            entries: entries.into_boxed_slice(),
+            entries,
         })
     }
 

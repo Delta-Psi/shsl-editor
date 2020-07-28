@@ -1,6 +1,8 @@
 use std::fmt::Write;
+use std::borrow::Cow;
 use crate::errors::*;
 use crate::formats::pak::Pak;
+use error_chain::bail;
 
 mod instructions;
 use instructions::*;
@@ -48,6 +50,34 @@ impl Lin {
         })
     }
 
+    pub fn encode(&self) -> Result<Vec<u8>> {
+        let mut buf = Vec::new();
+
+        for instr in &self.instructions {
+            instr.encode(&mut buf, &self)?;
+        }
+
+        let entries = match &self.strings {
+            None => vec![Cow::Owned(buf)],
+            Some(strings) => {
+                let entries = strings.iter()
+                    .map(|string| crate::encode_utf16(string)
+                        .map(|string| Cow::Owned(string)))
+                    .collect::<Result<Vec<_>>>()?;
+
+                let strings = Pak {
+                    entries,
+                }.repack()?;
+
+                vec![Cow::Owned(buf), Cow::Owned(strings)]
+            },
+        };
+
+        Pak {
+            entries,
+        }.repack()
+    }
+
     /// Converts this .lin to the custom .script format.
     pub fn to_script(&self) -> Result<String> {
         let mut result = String::new();
@@ -59,6 +89,25 @@ impl Lin {
         }
 
         Ok(result)
+    }
+
+    pub fn from_script(input: &str) -> Result<Self> {
+        let script = script_parser::parse_script(input)
+            .chain_err(|| "could not parse script")?;
+        let mut instructions = Vec::new();
+        let mut strings = Vec::new();
+
+        for instr in script.instrs {
+            instructions.push(Instr::from_script(&instr, &mut strings)?);
+        }
+
+        Ok(Lin {
+            instructions,
+            strings: match strings.len() {
+                0 => None,
+                _ => Some(strings),
+            },
+        })
     }
 }
 
@@ -77,4 +126,29 @@ fn write_escaped<W: Write>(writer: &mut W, str: &str) -> Result<()> {
     write!(writer, "`")?;
 
     Ok(())
+}
+
+fn unescape(string: &str) -> Result<String> {
+    let mut result = String::with_capacity(string.len());
+    let mut escaped = false;
+    for c in string.chars() {
+        if escaped {
+            match c {
+                '\\' => result.push('\\'),
+                't' => result.push('\t'),
+                '`' => result.push('`'),
+                _ => bail!("unknown escape sequence"),
+            }
+
+            escaped = false;
+        } else {
+            if c == '\\' {
+                escaped = true;
+            } else {
+                result.push(c);
+            }
+        }
+    }
+
+    Ok(result)
 }

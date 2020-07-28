@@ -8,7 +8,7 @@ ui 3, enable
 speaker 14
 voice 14, 99, 26, 100
 text `
-You look bored, Hajime! Wanna drink some tea with Ibuki?
+bookie time
 `
 raw 0x70, 0x4c
 raw 0x70, 0x4b

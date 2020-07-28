@@ -1,16 +1,50 @@
 #[derive(Debug)]
 pub struct Error {
+    input: String,
     expected: &'static str,
     position: usize,
 }
 
 impl Error {
-    pub fn new(expected: &'static str, position: usize) -> Self {
+    pub fn new(input: &str, expected: &'static str, position: usize) -> Self {
         Self {
+            input: input.to_string(),
             expected,
             position,
         }
     }
+}
+
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // determine line and column
+        let (line, line_start) = std::iter::once(0) // handle first line
+            .chain(self.input.match_indices('\n')
+                .map(|(i, _)| i+1))
+            .enumerate()
+            .find(|(_, i)| *i <= self.position)
+            .unwrap();
+        let column = self.position - line_start;
+
+        let line_end = match self.input[line_start..]
+            .match_indices('\n')
+            .next()
+        {
+            Some((i, _)) => i,
+            None => self.input.len(),
+        };
+
+        writeln!(f, "expected {} at {}:{}", self.expected, line+1, column+1)?;
+        writeln!(f, "{}", &self.input[line_start..line_end])?;
+
+        for _ in 0..column {
+            write!(f, " ")?;
+        }
+        writeln!(f, "^")
+    }
+}
+
+impl std::error::Error for Error {
 }
 
 type Result<T> = std::result::Result<T, Error>;
@@ -33,7 +67,7 @@ impl Token {
 #[derive(Debug)]
 pub struct Ident<'a>(pub Token, pub &'a str);
 #[derive(Debug)]
-pub struct Int(pub Token, pub i64);
+pub struct Int(pub Token, pub i32);
 #[derive(Debug)]
 pub struct Text<'a>(pub Token, pub &'a str);
 
@@ -42,6 +76,37 @@ pub enum Arg<'a> {
     Ident(Ident<'a>),
     Int(Int),
     Text(Text<'a>),
+}
+
+impl<'a> Arg<'a> {
+    pub fn as_ident(&self) -> Option<&'a str> {
+        match self {
+            Arg::Ident(ident) => Some(ident.1),
+            _ => None,
+        }
+    }
+
+    pub fn as_int(&self) -> Option<i32> {
+        match self {
+            Arg::Int(int) => Some(int.1),
+            _ => None,
+        }
+    }
+
+    pub fn as_text(&self) -> Option<&'a str> {
+        match self {
+            Arg::Text(text) => Some(text.1),
+            _ => None,
+        }
+    }
+
+    pub fn token(&self) -> &Token {
+        match self {
+            Arg::Ident(ident) => &ident.0,
+            Arg::Int(int) => &int.0,
+            Arg::Text(text) => &text.0,
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -76,9 +141,9 @@ pub fn parse_ident(input: &str, pos: usize) -> Result<(Ident, usize)> {
     let mut it = input[pos..].char_indices();
 
     match it.next() {
-        None => return Err(Error::new("identifier", pos)),
+        None => return Err(Error::new(input, "identifier", pos)),
         Some((i, c)) => if !is_ident_head(c) {
-            return Err(Error::new("identifier", pos+i));
+            return Err(Error::new(input, "identifier", pos+i));
         },
     }
 
@@ -109,10 +174,10 @@ pub fn parse_int(input: &str, pos: usize) -> Result<(Int, usize)> {
             None => input.len(),
         };
         if end == pos {
-            return Err(Error::new("hex digit", end));
+            return Err(Error::new(input, "hex digit", end));
         }
 
-        let mut value = i64::from_str_radix(&input[pos..end], 16).unwrap();
+        let mut value = i32::from_str_radix(&input[pos..end], 16).unwrap();
         if negative {
             value = -value;
         }
@@ -127,10 +192,10 @@ pub fn parse_int(input: &str, pos: usize) -> Result<(Int, usize)> {
             None => input.len(),
         };
         if end == pos {
-            return Err(Error::new("digit", end));
+            return Err(Error::new(input, "digit", end));
         }
 
-        let mut value = i64::from_str_radix(&input[pos..end], 10).unwrap();
+        let mut value = i32::from_str_radix(&input[pos..end], 10).unwrap();
         if negative {
             value = -value;
         }
@@ -143,7 +208,7 @@ pub fn parse_text(input: &str, pos: usize) -> Result<(Text, usize)> {
     let begin = pos;
 
     if !input[pos..].starts_with("`\n") {
-        return Err(Error::new("backquote+newline", pos));
+        return Err(Error::new(input, "backquote+newline", pos));
     }
     let pos = pos+2;
 
@@ -156,7 +221,7 @@ pub fn parse_text(input: &str, pos: usize) -> Result<(Text, usize)> {
                 't' => (),
                 '`' => (),
 
-                _ => return Err(Error::new("escape character", pos+i)),
+                _ => return Err(Error::new(input, "escape character", pos+i)),
             }
 
             escaped = false;
@@ -174,7 +239,7 @@ pub fn parse_text(input: &str, pos: usize) -> Result<(Text, usize)> {
     }
 
     if escaped == true {
-        return Err(Error::new("escape character", input.len()));
+        return Err(Error::new(input, "escape character", input.len()));
     }
 
     let end = match end {
@@ -193,7 +258,7 @@ pub fn parse_arg(input: &str, pos: usize) -> Result<(Arg, usize)> {
     } else if let Ok((text, pos)) = parse_text(input, pos) {
         Ok((Arg::Text(text), pos))
     } else {
-        Err(Error::new("identifier, integer or text", pos))
+        Err(Error::new(input, "identifier, integer or text", pos))
     }
 }
 
@@ -224,7 +289,7 @@ pub fn parse_instr(input: &str, pos: usize) -> Result<(Instr, usize)> {
     };
 
     if !input[pos..].starts_with("\n") {
-        Err(Error::new("newline", pos))
+        Err(Error::new(input, "newline", pos))
     } else {
         Ok((Instr {
             token: Token::new(begin, pos+1),
