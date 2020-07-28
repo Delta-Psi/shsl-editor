@@ -238,7 +238,7 @@ pub fn parse_text(input: &str, pos: usize) -> Result<(Text, usize)> {
         }
     }
 
-    if escaped == true {
+    if escaped {
         return Err(Error::new(input, "escape character", input.len()));
     }
 
@@ -275,7 +275,7 @@ pub fn parse_instr(input: &str, pos: usize) -> Result<(Instr, usize)> {
         let mut pos = skip_whitespace(input, pos);
 
         // other arguments
-        while input[pos..].starts_with(",") {
+        while input[pos..].starts_with(',') {
             pos = skip_whitespace(input, pos+1);
             let (arg, new_pos) = parse_arg(input, pos)?;
             args.push(arg);
@@ -288,7 +288,7 @@ pub fn parse_instr(input: &str, pos: usize) -> Result<(Instr, usize)> {
         pos
     };
 
-    if !input[pos..].starts_with("\n") {
+    if !input[pos..].starts_with('\n') {
         Err(Error::new(input, "newline", pos))
     } else {
         Ok((Instr {

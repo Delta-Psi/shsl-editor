@@ -62,7 +62,7 @@ impl Lin {
             Some(strings) => {
                 let entries = strings.iter()
                     .map(|string| crate::encode_utf16(string)
-                        .map(|string| Cow::Owned(string)))
+                        .map(Cow::Owned))
                     .collect::<Result<Vec<_>>>()?;
 
                 let strings = Pak {
@@ -118,7 +118,7 @@ fn write_escaped<W: Write>(writer: &mut W, str: &str) -> Result<()> {
             '\\' => write!(writer, "\\\\")?,
             '\t' => write!(writer, "\\t")?,
             '`' => write!(writer, "\\`")?,
-            '\n' => write!(writer, "\n")?,
+            '\n' => writeln!(writer)?,
             '\x20'..='\x7e' => write!(writer, "{}", c)?,
             _ => write!(writer, "{}", c.escape_unicode())?,
         }
@@ -141,12 +141,10 @@ fn unescape(string: &str) -> Result<String> {
             }
 
             escaped = false;
+        } else if c == '\\' {
+            escaped = true;
         } else {
-            if c == '\\' {
-                escaped = true;
-            } else {
-                result.push(c);
-            }
+            result.push(c);
         }
     }
 
