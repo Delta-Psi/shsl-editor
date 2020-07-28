@@ -159,7 +159,6 @@ dependencies = [
  "byteorder",
  "error-chain",
  "log",
- "pest",
  "pest_derive",
  "png",
  "relative-path",
