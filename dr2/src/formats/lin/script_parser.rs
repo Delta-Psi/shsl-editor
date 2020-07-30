@@ -379,6 +379,9 @@ this is some \`text\t
     #[test]
     fn script() {
         let input = include_str!("test.script");
-        parse_script(input).unwrap();
+        let lin = super::super::Lin::from_script(input).unwrap();
+        let input2 = lin.to_script().unwrap();
+        let lin2 = super::super::Lin::from_script(&input2).unwrap();
+        assert_eq!(lin, lin2);
     }
 }

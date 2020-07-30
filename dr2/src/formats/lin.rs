@@ -8,7 +8,7 @@ mod instructions;
 use instructions::*;
 pub mod script_parser;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Lin {
     pub instructions: Vec<Instr>,
     pub strings: Option<Vec<String>>,
