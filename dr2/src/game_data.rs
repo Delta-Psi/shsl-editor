@@ -179,12 +179,14 @@ impl Project {
     }
 }
 
+pub mod presents;
 pub mod scripts;
 pub mod dialogue;
 pub mod music;
 pub mod report_card;
 
 pub fn extract(project: &mut Project, files: &GameFiles) -> Result<()> {
+    presents::extract(project, files)?;
     scripts::extract(project, files)?;
     report_card::extract(project, files)?;
     dialogue::extract(project, files)?;
@@ -194,6 +196,7 @@ pub fn extract(project: &mut Project, files: &GameFiles) -> Result<()> {
 }
 
 pub fn inject(project: &mut Project, files: &mut GameFiles) -> Result<()> {
+    presents::extract(project, files)?;
     scripts::inject(project, files)?;
     report_card::inject(project, files)?;
     dialogue::inject(project, files)?;
