@@ -196,7 +196,7 @@ pub fn extract(project: &mut Project, files: &GameFiles) -> Result<()> {
 }
 
 pub fn inject(project: &mut Project, files: &mut GameFiles) -> Result<()> {
-    presents::extract(project, files)?;
+    presents::inject(project, files)?;
     scripts::inject(project, files)?;
     report_card::inject(project, files)?;
     dialogue::inject(project, files)?;
