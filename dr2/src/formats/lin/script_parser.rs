@@ -303,6 +303,12 @@ pub fn parse_script(input: &str) -> Result<Script> {
     let mut instrs = Vec::new();
     let mut pos = 0;
     while pos < input.len() {
+        pos = skip_whitespace(input, pos);
+        // skip empty lines
+        while input[pos..].starts_with('\n') {
+            pos = skip_whitespace(input, pos+1);
+        }
+
         let (instr, new_pos) = parse_instr(input, pos)?;
         instrs.push(instr);
         pos = new_pos;
