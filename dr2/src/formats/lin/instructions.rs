@@ -28,7 +28,7 @@ pub enum Instr {
     //StartOfJump(u16),
 
     Pause,
-    //WaitFrame,
+    WaitFrame,
 
     Raw(Vec<u8>),
 }
@@ -60,7 +60,7 @@ impl Instr {
             //0x3b => (StartOfJump(BE::read_u16(&data[2..4])), 4),
 
             0x4b => (Pause, 2),
-            //0x4c => (WaitFrame, 2),
+            0x4c => (WaitFrame, 2),
 
             op @ 0x4e..=0xff => {
                 warn!("invalid opcode {:x}", op);
@@ -116,6 +116,9 @@ impl Instr {
             Pause => {
                 writeln!(writer, "pause")?;
             },
+            WaitFrame => {
+                writeln!(writer, "wait_frame")?;
+            }
 
             Raw(bytes) => {
                 write!(writer, "raw")?;
@@ -263,6 +266,7 @@ impl Instr {
             },
 
             "pause" => Ok(I::Pause),
+            "wait_frame" => (Ok(I::WaitFrame)),
 
             "raw" => {
                 let mut bytes = Vec::with_capacity(instr.args.len());
@@ -340,6 +344,10 @@ impl Instr {
             Pause => {
                 writer.write_u8(0x70)?;
                 writer.write_u8(0x4b)?;
+            },
+            WaitFrame => {
+                writer.write_u8(0x70)?;
+                writer.write_u8(0x4c)?;
             },
 
             Raw(bytes) => {
