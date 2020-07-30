@@ -375,13 +375,4 @@ this is some \`text\t
         assert_eq!(result.0 .1, &input[2..input.len()-1]);
         assert_eq!(result.1, input.len());
     }
-
-    #[test]
-    fn script() {
-        let input = include_str!("test.script");
-        let lin = super::super::Lin::from_script(input).unwrap();
-        let input2 = lin.to_script().unwrap();
-        let lin2 = super::super::Lin::from_script(&input2).unwrap();
-        assert_eq!(lin, lin2);
-    }
 }

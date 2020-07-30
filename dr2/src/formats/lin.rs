@@ -50,12 +50,16 @@ impl Lin {
         })
     }
 
+    fn encode_instructions<W: std::io::Write>(&self, writer: &mut W) -> Result<()> {
+        for instr in &self.instructions {
+            instr.encode(writer, &self)?;
+        }
+        Ok(())
+    }
+
     pub fn encode(&self) -> Result<Vec<u8>> {
         let mut buf = Vec::new();
-
-        for instr in &self.instructions {
-            instr.encode(&mut buf, &self)?;
-        }
+        self.encode_instructions(&mut buf)?;
 
         let entries = match &self.strings {
             None => vec![Cow::Owned(buf)],
@@ -149,4 +153,22 @@ fn unescape(string: &str) -> Result<String> {
     }
 
     Ok(result)
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn script() {
+        let input = include_bytes!("lin/test.lin");
+        let lin = super::Lin::from_bytes(input).unwrap();
+        let script = lin.to_script().unwrap();
+        let lin2 = super::Lin::from_script(&script).unwrap();
+
+        let mut buf = Vec::new();
+        lin.encode_instructions(&mut buf).unwrap();
+        let mut buf2 = Vec::new();
+        lin2.encode_instructions(&mut buf2).unwrap();
+
+        assert_eq!(buf, buf2);
+    }
 }
