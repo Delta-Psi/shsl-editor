@@ -1,7 +1,7 @@
 use crate::errors::*;
 use crate::formats::wad::Wad;
 use crate::project::Project;
-use serde::Deserialize;
+use serde::{Serialize, Deserialize};
 use std::path::Path;
 
 /// Contains handles to every relevant game file.
@@ -25,6 +25,15 @@ impl GameFiles {
     }
 }
 
+#[derive(Clone, Copy, Default, Debug, Serialize, Deserialize)]
+pub struct Config {
+    pub presents: bool,
+    pub scripts: bool,
+    pub dialogue: bool,
+    pub music: bool,
+    pub report_card: bool,
+}
+
 pub mod presents;
 pub mod scripts;
 pub mod dialogue;
@@ -32,21 +41,45 @@ pub mod music;
 pub mod report_card;
 
 pub fn extract(project: &mut Project, files: &GameFiles) -> Result<()> {
-    presents::extract(project, files)?;
-    scripts::extract(project, files)?;
-    report_card::extract(project, files)?;
-    dialogue::extract(project, files)?;
-    music::extract(project, files)?;
+    let config = project.config().game_data;
+
+    if config.presents {
+        presents::extract(project, files)?;
+    }
+    if config.scripts {
+        scripts::extract(project, files)?;
+    }
+    if config.report_card {
+        report_card::extract(project, files)?;
+    }
+    if config.dialogue {
+        dialogue::extract(project, files)?;
+    }
+    if config.music {
+        music::extract(project, files)?;
+    }
 
     Ok(())
 }
 
 pub fn inject(project: &mut Project, files: &mut GameFiles) -> Result<()> {
-    presents::inject(project, files)?;
-    scripts::inject(project, files)?;
-    report_card::inject(project, files)?;
-    dialogue::inject(project, files)?;
-    music::inject(project, files)?;
+    let config = project.config().game_data;
+
+    if config.presents {
+        presents::inject(project, files)?;
+    }
+    if config.scripts {
+        scripts::inject(project, files)?;
+    }
+    if config.report_card {
+        report_card::inject(project, files)?;
+    }
+    if config.dialogue {
+        dialogue::inject(project, files)?;
+    }
+    if config.music {
+        music::inject(project, files)?;
+    }
 
     Ok(())
 }

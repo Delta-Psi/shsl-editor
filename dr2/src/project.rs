@@ -6,15 +6,16 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
-// TODO
 #[derive(Default, Serialize, Deserialize)]
-pub struct ProjectConfig {}
+pub struct ProjectConfig {
+    pub game_data: crate::game_data::Config,
+}
 
 pub struct Project {
     base_path: PathBuf,
     config: ProjectConfig,
     sync_path: PathBuf,
-    pub sync: HashMap<RelativePathBuf, std::time::SystemTime>,
+    sync: HashMap<RelativePathBuf, std::time::SystemTime>,
 }
 
 impl Project {
@@ -131,18 +132,19 @@ impl Project {
             .chain_err(|| format!("could not check modification time for {}", path))?;
 
         if let Some(prev) = self.sync.get(path) {
-            if *prev < modified {
-                info!("reading {}", full_path.display());
-                let data = std::fs::read(&full_path)
-                    .chain_err(|| format!("could not open {}", path))?;
-                func(&data)?;
-
-                self.sync.insert(path.to_owned(), modified);
-                self.update_sync_file()?;
+            if *prev >= modified {
+                return Ok(());
             }
-        } else {
-            unreachable!("file to be opened not in sync file");
         }
+
+        // create/update entry
+        info!("reading {}", full_path.display());
+        let data = std::fs::read(&full_path)
+            .chain_err(|| format!("could not open {}", path))?;
+        func(&data)?;
+
+        self.sync.insert(path.to_owned(), modified);
+        self.update_sync_file()?;
 
         Ok(())
     }
