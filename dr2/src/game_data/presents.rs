@@ -23,12 +23,12 @@ pub fn extract(project: &mut Project, files: &GameFiles) -> Result<()> {
             Some((wad_path, index))
         }).filter(|(_, index)| *index < PRESENT_COUNT as u8)
         .try_for_each::<_, Result<_>>(|(wad_path, index)| {
-            let data = files.dr2_data.read_file(&wad_path)?;
-            let tga = Tga::from_bytes(&data)?;
-            let png = tga.to_png()?;
-
-            project.write_file(format!("presents/{:03}.png", index), &png)?;
-            Ok(())
+            project.write_file(format!("presents/{:03}.png", index), || {
+                let data = files.dr2_data.read_file(&wad_path)?;
+                let tga = Tga::from_bytes(&data)?;
+                let png = tga.to_png()?;
+                Ok(png)
+            })
         })?;
 
     let pak = files.dr2_data_us.read_file("Dr2/data/us/bin/bin_progress_font_l.pak")?;
@@ -37,19 +37,21 @@ pub fn extract(project: &mut Project, files: &GameFiles) -> Result<()> {
     let e3 = Pak::from_bytes(&pak.entries[3])?;
 
     
-    let mut presents = BTreeMap::new();
-    for index in 0..PRESENT_COUNT {
-        use crate::decode_utf16;
+    project.write_toml("presents.toml", || {
+        let mut presents = BTreeMap::new();
+        for index in 0..PRESENT_COUNT {
+            use crate::decode_utf16;
 
-        presents.insert(
-            format!("{:03}", index),
-            Present {
-                name: decode_utf16(&e2.entries[index])?,
-                description: decode_utf16(&e3.entries[index])?,
-            },
-        );
-    }
-    project.write_toml("presents.toml", &presents)?;
+            presents.insert(
+                format!("{:03}", index),
+                Present {
+                    name: decode_utf16(&e2.entries[index])?,
+                    description: decode_utf16(&e3.entries[index])?,
+                },
+            );
+        }
+        Ok(presents)
+    })?;
 
     Ok(())
 }

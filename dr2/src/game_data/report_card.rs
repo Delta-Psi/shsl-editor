@@ -27,52 +27,55 @@ pub struct ReportCard {
 
 pub fn extract(project: &mut Project, files: &GameFiles) -> Result<()> {
     // REPORT CARD TEXT
-    let pak = files
-        .dr2_data_us
-        .read_file("Dr2/data/us/bin/bin_progress_font_l.pak")?;
-    let pak = Pak::from_bytes(&pak)?;
+    project.write_toml("report_card.toml", || {
+        let pak = files
+            .dr2_data_us
+            .read_file("Dr2/data/us/bin/bin_progress_font_l.pak")?;
+        let pak = Pak::from_bytes(&pak)?;
 
-    let e8 = Pak::from_bytes(&pak.entries[8])?;
-    let e9 = Pak::from_bytes(&pak.entries[9])?;
-    let e16 = Pak::from_bytes(&pak.entries[16])?;
+        let e8 = Pak::from_bytes(&pak.entries[8])?;
+        let e9 = Pak::from_bytes(&pak.entries[9])?;
+        let e16 = Pak::from_bytes(&pak.entries[16])?;
 
-    let mut report_cards = BTreeMap::new();
+        let mut report_cards = BTreeMap::new();
 
-    for i in 0..STUDENT_COUNT {
-        use crate::decode_utf16;
+        for i in 0..STUDENT_COUNT {
+            use crate::decode_utf16;
 
-        report_cards.insert(
-            format!("{:02}", i),
-            ReportCard {
-                name: decode_utf16(&e16.entries[i])?,
-                height: decode_utf16(&e16.entries[STUDENT_COUNT + i])?,
-                weight: decode_utf16(&e16.entries[2 * STUDENT_COUNT + i])?,
-                chest: decode_utf16(&e16.entries[3 * STUDENT_COUNT + i])?,
-                blood_type: decode_utf16(&e16.entries[4 * STUDENT_COUNT + i])?,
-                birthday: decode_utf16(&e16.entries[5 * STUDENT_COUNT + i])?,
-                likes: decode_utf16(&e16.entries[6 * STUDENT_COUNT + i])?,
-                dislikes: decode_utf16(&e16.entries[7 * STUDENT_COUNT + i])?,
+            report_cards.insert(
+                format!("{:02}", i),
+                ReportCard {
+                    name: decode_utf16(&e16.entries[i])?,
+                    height: decode_utf16(&e16.entries[STUDENT_COUNT + i])?,
+                    weight: decode_utf16(&e16.entries[2 * STUDENT_COUNT + i])?,
+                    chest: decode_utf16(&e16.entries[3 * STUDENT_COUNT + i])?,
+                    blood_type: decode_utf16(&e16.entries[4 * STUDENT_COUNT + i])?,
+                    birthday: decode_utf16(&e16.entries[5 * STUDENT_COUNT + i])?,
+                    likes: decode_utf16(&e16.entries[6 * STUDENT_COUNT + i])?,
+                    dislikes: decode_utf16(&e16.entries[7 * STUDENT_COUNT + i])?,
 
-                ultimate: [
-                    decode_utf16(&e8.entries[i])?,
-                    decode_utf16(&e8.entries[STUDENT_COUNT + i])?,
-                    decode_utf16(&e8.entries[2 * STUDENT_COUNT + i])?,
-                ],
+                    ultimate: [
+                        decode_utf16(&e8.entries[i])?,
+                        decode_utf16(&e8.entries[STUDENT_COUNT + i])?,
+                        decode_utf16(&e8.entries[2 * STUDENT_COUNT + i])?,
+                    ],
 
-                fte_summaries: match i {
-                    0 => None, // gets nothing :'(
-                    _ => Some([
-                        decode_utf16(&e9.entries[(i - 1) * 5])?,
-                        decode_utf16(&e9.entries[(i - 1) * 5 + 1])?,
-                        decode_utf16(&e9.entries[(i - 1) * 5 + 2])?,
-                        decode_utf16(&e9.entries[(i - 1) * 5 + 3])?,
-                        decode_utf16(&e9.entries[(i - 1) * 5 + 4])?,
-                    ]),
+                    fte_summaries: match i {
+                        0 => None, // gets nothing :'(
+                        _ => Some([
+                            decode_utf16(&e9.entries[(i - 1) * 5])?,
+                            decode_utf16(&e9.entries[(i - 1) * 5 + 1])?,
+                            decode_utf16(&e9.entries[(i - 1) * 5 + 2])?,
+                            decode_utf16(&e9.entries[(i - 1) * 5 + 3])?,
+                            decode_utf16(&e9.entries[(i - 1) * 5 + 4])?,
+                        ]),
+                    },
                 },
-            },
-        );
-    }
-    project.write_toml("report_card.toml", &report_cards)?;
+                );
+        }
+
+        Ok(report_cards)
+    })?;
 
     // NAME IMAGES
     let pak = files
@@ -82,36 +85,42 @@ pub fn extract(project: &mut Project, files: &GameFiles) -> Result<()> {
     let e2 = Pak::from_bytes(&pak.entries[2])?;
 
     for i in 0..STUDENT_COUNT {
-        let image = Tga::from_bytes(&e2.entries[20 - i])?;
-        let png = image.to_png()?;
+        project.write_file(format!("report_card/names/{:02}.png", i), || {
+            let image = Tga::from_bytes(&e2.entries[20 - i])?;
+            let png = image.to_png()?;
 
-        project.write_file(format!("report_card/names/{:02}.png", i), &png)?;
+            Ok(png)
+        })?;
     }
 
     // ICONS
     let e3 = Pak::from_bytes(&pak.entries[3])?;
     for i in 0..STUDENT_ICON_COUNT {
-        let entry_index = match i {
-            0 => 11,
-            _ => 29 - i,
-        };
+        project.write_file(format!("report_card/icons/{:02}.png", i), || {
+            let entry_index = match i {
+                0 => 11,
+                _ => 29 - i,
+            };
 
-        let image = Tga::from_bytes(&e3.entries[entry_index])?;
-        let png = image.to_png()?;
+            let image = Tga::from_bytes(&e3.entries[entry_index])?;
+            let png = image.to_png()?;
 
-        project.write_file(format!("report_card/icons/{:02}.png", i), &png)?;
+            Ok(png)
+        })?;
     }
 
     // PICTURES
     for i in 0..STUDENT_PICTURE_COUNT {
-        let tga = files.dr2_data.read_file(&format!(
-            "Dr2/data/all/cg/report/tsushimbo_chara_{:03}.tga",
-            i
-        ))?;
-        let image = Tga::from_bytes(&tga)?;
-        let png = image.to_png()?;
+        project.write_file(format!("report_card/pictures/{:02}.png", i), || {
+            let tga = files.dr2_data.read_file(&format!(
+                    "Dr2/data/all/cg/report/tsushimbo_chara_{:03}.tga",
+                    i
+            ))?;
+            let image = Tga::from_bytes(&tga)?;
+            let png = image.to_png()?;
 
-        project.write_file(format!("report_card/pictures/{:02}.png", i), &png)?;
+            Ok(png)
+        })?;
     }
 
     Ok(())

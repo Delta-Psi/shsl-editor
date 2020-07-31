@@ -6,19 +6,21 @@ use std::collections::BTreeMap;
 
 pub fn extract(project: &mut Project, files: &GameFiles) -> Result<()> {
     // NAMES (text)
-    let pak = files
-        .dr2_data_us
-        .read_file("Dr2/data/us/bin/bin_progress_font_l.pak")?;
-    let pak = Pak::from_bytes(&pak)?;
-    let e18 = Pak::from_bytes(&pak.entries[18])?;
+    project.write_toml("dialogue/names.toml", || {
+        let pak = files
+            .dr2_data_us
+            .read_file("Dr2/data/us/bin/bin_progress_font_l.pak")?;
+        let pak = Pak::from_bytes(&pak)?;
+        let e18 = Pak::from_bytes(&pak.entries[18])?;
 
-    let mut names = BTreeMap::new();
-    for (i, entry) in e18.entries.iter().enumerate() {
-        let name = crate::decode_utf16(entry)?;
-        names.insert(format!("{:02}", i), name);
-    }
+        let mut names = BTreeMap::new();
+        for (i, entry) in e18.entries.iter().enumerate() {
+            let name = crate::decode_utf16(entry)?;
+            names.insert(format!("{:02}", i), name);
+        }
 
-    project.write_toml("dialogue/names.toml", &names)?;
+        Ok(names)
+    })?;
 
     // NAMES (images)
     let pak = files
@@ -27,10 +29,12 @@ pub fn extract(project: &mut Project, files: &GameFiles) -> Result<()> {
     let pak = Pak::from_bytes(&pak)?;
 
     for (i, entry) in pak.entries.iter().enumerate() {
-        let image = Tga::from_bytes(entry)?;
-        let png = image.to_png()?;
+        project.write_file(format!("dialogue/names/{:02}.png", i), || {
+            let image = Tga::from_bytes(entry)?;
+            let png = image.to_png()?;
 
-        project.write_file(format!("dialogue/names/{:02}.png", i), &png)?;
+            Ok(png)
+        })?;
     }
 
     // SPRITES
@@ -50,14 +54,15 @@ pub fn extract(project: &mut Project, files: &GameFiles) -> Result<()> {
         })();
 
         if let Some((character, sprite)) = result {
-            let tga = wad.read_file(&wad_path)?;
-            let image = Tga::from_bytes(&tga)?;
-            let png = image.to_png()?;
-
             project.write_file(
                 format!("dialogue/sprites/{:02}/{:02}.png", character, sprite),
-                &png,
-            )?;
+                || {
+                    let tga = wad.read_file(&wad_path)?;
+                    let image = Tga::from_bytes(&tga)?;
+                    let png = image.to_png()?;
+
+                    Ok(png)
+                })?;
         }
     }
 

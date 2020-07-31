@@ -14,16 +14,15 @@ pub fn extract(project: &mut Project, files: &GameFiles) -> Result<()> {
 
             Some((wad_path, a, b, c))
         }).try_for_each(|(wad_path, a, b, c)| {
-            let data = files.dr2_data_us.read_file(&wad_path)?;
-            let lin = Lin::from_bytes(&data)?;
-            let script = lin.to_script()?;
-
             project.write_file(
                 format!("scripts/{:02}/{:03}/{:03}.script", a, b, c),
-                &script.as_bytes(),
-            )?;
+                || {
+                    let data = files.dr2_data_us.read_file(&wad_path)?;
+                    let lin = Lin::from_bytes(&data)?;
+                    let script = lin.to_script()?;
 
-            Ok(())
+                    Ok(script.into_bytes())
+                })
         })
 }
 

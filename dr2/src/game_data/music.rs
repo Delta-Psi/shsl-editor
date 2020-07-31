@@ -27,21 +27,23 @@ pub fn extract(project: &mut Project, files: &GameFiles) -> Result<()> {
         })();
 
         if let Some((index, is_ogg)) = result {
-            let data = wad.read_file(&wad_path)?;
-
             if is_ogg {
-                project.write_file(format!("music/{:03}.ogg", index), &data)?;
+                project.write_file(
+                    format!("music/{:03}.ogg", index),
+                    || wad.read_file(&wad_path))?;
             } else {
-                let loop_begin = LE::read_u32(&data[4..8]) as f32 / SAMPLE_RATE;
-                let loop_end = LE::read_u32(&data[8..12]) as f32 / SAMPLE_RATE;
-
                 project.write_toml(
                     format!("music/{:03}.toml", index),
-                    &Track {
-                        loop_begin,
-                        loop_end,
-                    },
-                )?;
+                    || {
+                        let data = wad.read_file(&wad_path)?;
+                        let loop_begin = LE::read_u32(&data[4..8]) as f32 / SAMPLE_RATE;
+                        let loop_end = LE::read_u32(&data[8..12]) as f32 / SAMPLE_RATE;
+
+                        Ok(Track {
+                            loop_begin,
+                            loop_end,
+                        })
+                    })?;
             }
         }
     }

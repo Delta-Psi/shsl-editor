@@ -86,36 +86,49 @@ impl Project {
         &self.config
     }
 
-    pub fn write_file<P: AsRef<RelativePath>>(&mut self, path: P, data: &[u8]) -> Result<()> {
-        let path = path.as_ref();
-        let full_path = path.to_path(&self.base_path);
-        // ensure the parent directory exists
-        if let Some(parent) = full_path.parent() {
-            std::fs::create_dir_all(parent)
-                .chain_err(|| format!("could not create directory structure for {}", path))?;
-        }
-
-        info!("writing {}", full_path.display());
-        std::fs::write(&full_path, data)
-            .chain_err(|| format!("could not write {}", path))?;
-
-        self.sync.insert(
-            path.to_owned(),
-            std::fs::metadata(&full_path)
-            .chain_err(|| format!("could not check metadata for {}", path))?
-            .modified()
-            .chain_err(|| format!("could not check modification time for {}", path))?);
-        self.update_sync_file()
-    }
-
-    pub fn write_toml<P: AsRef<RelativePath>, T: Serialize>(
+    pub fn write_file<P: AsRef<RelativePath>, F: FnOnce() -> Result<Vec<u8>>>(
         &mut self,
         path: P,
-        data: &T,
+        func: F,
     ) -> Result<()> {
-        let string = toml::to_string_pretty(data)
-            .chain_err(|| format!("could not serialize {}", path.as_ref()))?;
-        self.write_file(path, &string.as_bytes())
+        let path = path.as_ref();
+        if !self.sync.contains_key(path) {
+            let data = func()?;
+
+            let full_path = path.to_path(&self.base_path);
+            // ensure the parent directory exists
+            if let Some(parent) = full_path.parent() {
+                std::fs::create_dir_all(parent)
+                    .chain_err(|| format!("could not create directory structure for {}", path))?;
+            }
+
+            info!("writing {}", full_path.display());
+            std::fs::write(&full_path, data)
+                .chain_err(|| format!("could not write {}", path))?;
+
+            self.sync.insert(
+                path.to_owned(),
+                std::fs::metadata(&full_path)
+                .chain_err(|| format!("could not check metadata for {}", path))?
+                .modified()
+                .chain_err(|| format!("could not check modification time for {}", path))?);
+            self.update_sync_file()?;
+        }
+
+        Ok(())
+    }
+
+    pub fn write_toml<P: AsRef<RelativePath>, T: Serialize, F: FnOnce() -> Result<T>>(
+        &mut self,
+        path: P,
+        func: F,
+    ) -> Result<()> {
+        self.write_file(path.as_ref(), || {
+            let data = func()?;
+            let string = toml::to_string_pretty(&data)
+                .chain_err(|| format!("could not serialize {}", path.as_ref()))?;
+            Ok(string.into_bytes())
+        })
     }
 
     /// Only executes the closure if the file has been edited.
