@@ -251,9 +251,10 @@ fn main() {
 }
 
 pub fn extract(game_path: &str, outdir: &str) -> dr2::errors::Result<()> {
+    use dr2::project::Project;
     use dr2::game_data;
 
-    let mut project = game_data::Project::create(outdir, Default::default())?;
+    let mut project = Project::create(outdir, Default::default())?;
     let game_files = game_data::GameFiles::load(game_path)?;
     game_data::extract(&mut project, &game_files)?;
 
@@ -261,9 +262,10 @@ pub fn extract(game_path: &str, outdir: &str) -> dr2::errors::Result<()> {
 }
 
 pub fn inject(game_path: &str, indir: &str) -> dr2::errors::Result<()> {
+    use dr2::project::Project;
     use dr2::game_data;
 
-    let mut project = game_data::Project::open(indir)?;
+    let mut project = Project::open(indir)?;
     let mut game_files = game_data::GameFiles::load(game_path)?;
     game_data::inject(&mut project, &mut game_files)?;
 

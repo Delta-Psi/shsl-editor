@@ -1,5 +1,6 @@
 pub mod formats;
 pub mod game_data;
+pub mod project;
 
 pub mod errors {
     use error_chain::error_chain;
