@@ -64,11 +64,23 @@ impl Project {
             .chain_err(|| "could not deserialize configuration file")?;
 
         let sync_path = base_path.join("Sync.toml");
-        info!("reading sync data from {}", sync_path.display());
-        let sync_data = std::fs::read(&sync_path)
-            .chain_err(|| "could not read sync file")?;
-        let sync = toml::from_slice(&sync_data)
-            .chain_err(|| "could not deserialize sync file")?;
+        let sync = match (|| {
+            info!("reading sync data from {}", sync_path.display());
+            let sync_data = std::fs::read(&sync_path)
+                .chain_err(|| "could not read sync file")?;
+            let sync = toml::from_slice(&sync_data)
+                .chain_err(|| "could not deserialize sync file")?;
+            Ok(sync)
+        })() {
+            Result::Ok(sync) => sync,
+            Result::Err(_) => {
+                // create new, blank sync file
+                info!("writing blank sync file to {}", sync_path.display());
+                std::fs::write(&sync_path, b"")
+                    .chain_err(|| "could not write sync file")?;
+                HashMap::new()
+            }
+        };
 
         Ok(Self {
             base_path: base_path.to_path_buf(),
