@@ -3,6 +3,8 @@ use crate::formats::wad::Wad;
 use crate::project::Project;
 use serde::{Serialize, Deserialize};
 use std::path::Path;
+use relative_path::RelativePath;
+use error_chain::bail;
 
 /// Contains handles to every relevant game file.
 pub struct GameFiles {
@@ -25,13 +27,15 @@ impl GameFiles {
     }
 }
 
-#[derive(Clone, Copy, Default, Debug, Serialize, Deserialize)]
+#[derive(Clone, Default, Debug, Serialize, Deserialize)]
 pub struct Config {
     pub presents: bool,
     pub scripts: bool,
     pub dialogue: bool,
     pub music: bool,
     pub report_card: bool,
+
+    pub extra: Vec<String>,
 }
 
 pub mod presents;
@@ -41,7 +45,24 @@ pub mod music;
 pub mod report_card;
 
 pub fn extract(project: &mut Project, files: &GameFiles) -> Result<()> {
-    let config = project.config().game_data;
+    let config = project.config().game_data.clone();
+
+    for extra_path in &config.extra {
+        let split: Vec<&str> = extra_path.splitn(2, ':').collect();
+        let wad_name = split[0];
+        let wad_path = split[1];
+        let path = RelativePath::new("extra").join(wad_name).join(wad_path);
+
+        let wad = match wad_name {
+            "dr2_data" => &files.dr2_data,
+            "dr2_data_us" => &files.dr2_data_us,
+            "dr2_data_keyboard" => &files.dr2_data_keyboard,
+            "dr2_data_keyboard_us" => &files.dr2_data_keyboard_us,
+            _ => bail!("unknown wad: {}", wad_name),
+        };
+
+        project.write_file(path, || wad.read_file(wad_path))?;
+    }
 
     if config.presents {
         presents::extract(project, files)?;
@@ -63,7 +84,7 @@ pub fn extract(project: &mut Project, files: &GameFiles) -> Result<()> {
 }
 
 pub fn inject(project: &mut Project, files: &mut GameFiles) -> Result<()> {
-    let config = project.config().game_data;
+    let config = project.config().game_data.clone();
 
     if config.presents {
         presents::inject(project, files)?;
