@@ -86,6 +86,23 @@ pub fn extract(project: &mut Project, files: &GameFiles) -> Result<()> {
 pub fn inject(project: &mut Project, files: &mut GameFiles) -> Result<()> {
     let config = project.config().game_data.clone();
 
+    for extra_path in &config.extra {
+        let split: Vec<&str> = extra_path.splitn(2, ':').collect();
+        let wad_name = split[0];
+        let wad_path = split[1];
+        let path = RelativePath::new("extra").join(wad_name).join(wad_path);
+
+        let wad = match wad_name {
+            "dr2_data" => &mut files.dr2_data,
+            "dr2_data_us" => &mut files.dr2_data_us,
+            "dr2_data_keyboard" => &mut files.dr2_data_keyboard,
+            "dr2_data_keyboard_us" => &mut files.dr2_data_keyboard_us,
+            _ => bail!("unknown wad: {}", wad_name),
+        };
+
+        project.open_file(path, |data| wad.inject_file(wad_path, &data))?;
+    }
+
     if config.presents {
         presents::inject(project, files)?;
     }
