@@ -80,8 +80,8 @@ impl Chunk for Mesh {
                     for _ in 0..stripe_count {
                         for _ in 0..stripe_size/2 - 1 {
                             let a = LE::read_u16(&data[0..]);
-                            let b = LE::read_u16(&data[2..]);
-                            let c = LE::read_u16(&data[4..]);
+                            let c = LE::read_u16(&data[2..]);
+                            let b = LE::read_u16(&data[4..]);
                             let d = LE::read_u16(&data[6..]);
 
                             faces.push((a, b, c, d));
