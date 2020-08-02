@@ -1,6 +1,7 @@
 use byteorder::{ByteOrder, LE};
 
 pub mod file;
+pub mod model;
 
 #[derive(Debug)]
 pub enum Error {
@@ -106,6 +107,10 @@ impl<'a> Iterator for Chunks<'a> {
     }
 }
 
+pub trait Chunk {
+    fn new(chunk: ChunkRef) -> Self;
+}
+
 #[derive(Debug)]
 pub struct Generic {
     pub type_: u16,
@@ -113,7 +118,7 @@ pub struct Generic {
     pub data: Vec<u8>,
 }
 
-impl Generic {
+impl Chunk for Generic {
     fn new(chunk: ChunkRef) -> Self {
         Self {
             type_: chunk.type_,

@@ -6,8 +6,8 @@ pub struct File {
     pub subfiles: Vec<Subfile>,
 }
 
-impl File {
-    pub fn new(chunk: ChunkRef) -> Self {
+impl Chunk for File {
+    fn new(chunk: ChunkRef) -> Self {
         assert_eq!(chunk.type_, 0x0002, "chunk type doesn't match");
 
         Self {
@@ -25,8 +25,8 @@ pub struct Subfile {
     pub chunks: Vec<SubfileChunk>,
 }
 
-impl Subfile {
-    pub fn new(chunk: ChunkRef) -> Self {
+impl Chunk for Subfile {
+    fn new(chunk: ChunkRef) -> Self {
         assert_eq!(chunk.type_, 0x0003, "chunk type doesn't match");
 
         Self {
@@ -40,12 +40,17 @@ impl Subfile {
 
 #[derive(Debug)]
 pub enum SubfileChunk {
+    Model(model::Model),
+
     Generic(Generic),
 }
 
-impl SubfileChunk {
-    pub fn new(chunk: ChunkRef) -> Self {
+impl Chunk for SubfileChunk {
+    fn new(chunk: ChunkRef) -> Self {
         match chunk.type_ {
+            // 0x0004: bone
+            0x0005 => SubfileChunk::Model(model::Model::new(chunk)),
+
             _ => SubfileChunk::Generic(Generic::new(chunk)),
         }
     }
