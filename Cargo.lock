@@ -123,6 +123,7 @@ dependencies = [
  "byteorder",
  "error-chain",
  "log",
+ "obj",
  "png",
  "relative-path",
  "serde",
@@ -231,6 +232,12 @@ dependencies = [
  "memchr",
  "version_check",
 ]
+
+[[package]]
+name = "obj"
+version = "0.10.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d510a91cf52eab52df72ef1a87b9db96e3bb770e3148a58a39db7cdc13cd2692"
 
 [[package]]
 name = "object"
