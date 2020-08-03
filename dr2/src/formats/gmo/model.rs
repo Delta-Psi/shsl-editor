@@ -17,6 +17,19 @@ impl Chunk for Model {
                 .collect(),
         }
     }
+
+    fn type_(&self) -> u16 {
+        0x0005
+    }
+
+    fn encode_impl(&self) -> (Vec<u8>, Vec<u8>) {
+        let mut buf = Vec::new();
+        for chunk in &self.chunks {
+            buf.write_all(&chunk.encode()).unwrap();
+        }
+
+        (self.header.clone(), buf)
+    }
 }
 
 #[derive(Debug)]
@@ -34,6 +47,22 @@ impl Chunk for ModelChunk {
             0x0007 => ModelChunk::VertexArray(VertexArray::new(chunk)),
 
             _ => ModelChunk::Generic(Generic::new(chunk)),
+        }
+    }
+
+    fn type_(&self) -> u16 {
+        match self {
+            ModelChunk::Mesh(inner) => inner.type_(),
+            ModelChunk::VertexArray(inner) => inner.type_(),
+            ModelChunk::Generic(inner) => inner.type_(),
+        }
+    }
+
+    fn encode_impl(&self) -> (Vec<u8>, Vec<u8>) {
+        match self {
+            ModelChunk::Mesh(inner) => inner.encode_impl(),
+            ModelChunk::VertexArray(inner) => inner.encode_impl(),
+            ModelChunk::Generic(inner) => inner.encode_impl(),
         }
     }
 }
@@ -59,6 +88,7 @@ impl Chunk for Mesh {
                     // material id
                     assert_eq!(chunk.header.len(), 0);
                     let id = LE::read_u16(&chunk.data[0..2]) - 0x2000;
+                    assert_eq!(&chunk.data[2..], &[8, 0]);
                     material_id = Some(id);
                 },
 
@@ -101,6 +131,51 @@ impl Chunk for Mesh {
             material_id,
             faces,
         }
+    }
+
+    fn type_(&self) -> u16 {
+        0x0006
+    }
+    fn encode_impl(&self) -> (Vec<u8>, Vec<u8>) {
+        let mut buf = Vec::new();
+
+        if let Some(material_id) = self.material_id {
+            let mut cdata = Vec::new();
+            cdata.write_u16::<LE>(material_id + 0x2000).unwrap();
+            cdata.write_all(&[8, 0]).unwrap();
+
+            let chunk = Generic {
+                type_: 0x8061,
+                header: Vec::new(),
+                data: cdata,
+            };
+            buf.write_all(&chunk.encode()).unwrap();
+        }
+
+        let mut cdata = Vec::new();
+        cdata.write_all(&[0,16,7,0]).unwrap();
+        cdata.write_u32::<LE>(4).unwrap();
+
+        cdata.write_u32::<LE>(4).unwrap();
+        cdata.write_u32::<LE>(self.faces.len() as u32).unwrap();
+
+        for face in &self.faces {
+            let (a, b, c, d) = *face;
+
+            cdata.write_u16::<LE>(a).unwrap();
+            cdata.write_u16::<LE>(b).unwrap();
+            cdata.write_u16::<LE>(d).unwrap();
+            cdata.write_u16::<LE>(c).unwrap();
+        }
+
+        let chunk = Generic {
+            type_: 0x8066,
+            header: Vec::new(),
+            data: cdata,
+        };
+        buf.write_all(&chunk.encode()).unwrap();
+
+        (self.header.clone(), buf)
     }
 }
 
@@ -157,5 +232,29 @@ impl Chunk for VertexArray {
             header: chunk.header.to_owned(),
             vertices,
         }
+    }
+
+    fn type_(&self) -> u16 {
+        0x0007
+    }
+
+    fn encode_impl(&self) -> (Vec<u8>, Vec<u8>) {
+        let mut buf = Vec::new();
+        buf.write_u32::<LE>(0x200011e3).unwrap();
+        buf.write_u32::<LE>(self.vertices.len() as u32).unwrap();
+        buf.write_all(&[1,0,0,0,0,0,0,0]).unwrap();
+
+        for vertex in &self.vertices {
+            buf.write_f32::<LE>(vertex.uv.0).unwrap();
+            buf.write_f32::<LE>(vertex.uv.1).unwrap();
+            buf.write_f32::<LE>(vertex.normal.0).unwrap();
+            buf.write_f32::<LE>(vertex.normal.1).unwrap();
+            buf.write_f32::<LE>(vertex.normal.2).unwrap();
+            buf.write_f32::<LE>(vertex.pos.0).unwrap();
+            buf.write_f32::<LE>(vertex.pos.1).unwrap();
+            buf.write_f32::<LE>(vertex.pos.2).unwrap();
+        }
+
+        (self.header.to_owned(), buf)
     }
 }

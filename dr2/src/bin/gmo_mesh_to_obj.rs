@@ -32,7 +32,7 @@ fn main() {
                         gmo::model::ModelChunk::VertexArray(vertex_array) => {
                             for vertex in &vertex_array.vertices {
                                 obj.position.push([vertex.pos.0, vertex.pos.1, vertex.pos.2]);
-                                obj.texture.push([vertex.uv.0, vertex.uv.1]);
+                                obj.texture.push([vertex.uv.0, 1.0 - vertex.uv.1]); // fix v
                                 obj.normal.push([vertex.normal.0, vertex.normal.1, vertex.normal.2]);
                             }
                         },

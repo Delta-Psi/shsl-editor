@@ -17,6 +17,19 @@ impl Chunk for File {
                 .collect(),
         }
     }
+
+    fn type_(&self) -> u16 {
+        0x0002
+    }
+
+    fn encode_impl(&self) -> (Vec<u8>, Vec<u8>) {
+        let mut buf = Vec::new();
+        for chunk in &self.subfiles {
+            buf.write_all(&chunk.encode()).unwrap();
+        }
+
+        (self.header.clone(), buf)
+    }
 }
 
 #[derive(Debug)]
@@ -36,6 +49,19 @@ impl Chunk for Subfile {
                 .collect(),
         }
     }
+
+    fn type_(&self) -> u16 {
+        0x0003
+    }
+
+    fn encode_impl(&self) -> (Vec<u8>, Vec<u8>) {
+        let mut buf = Vec::new();
+        for chunk in &self.chunks {
+            buf.write_all(&chunk.encode()).unwrap();
+        }
+
+        (self.header.clone(), buf)
+    }
 }
 
 #[derive(Debug)]
@@ -52,6 +78,20 @@ impl Chunk for SubfileChunk {
             0x0005 => SubfileChunk::Model(model::Model::new(chunk)),
 
             _ => SubfileChunk::Generic(Generic::new(chunk)),
+        }
+    }
+
+    fn type_(&self) -> u16 {
+        match self {
+            SubfileChunk::Model(model) => model.type_(),
+            SubfileChunk::Generic(chunk) => chunk.type_(),
+        }
+    }
+
+    fn encode_impl(&self) -> (Vec<u8>, Vec<u8>) {
+        match self {
+            SubfileChunk::Model(model) => model.encode_impl(),
+            SubfileChunk::Generic(chunk) => chunk.encode_impl(),
         }
     }
 }

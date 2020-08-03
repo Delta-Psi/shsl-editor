@@ -1,4 +1,7 @@
-use byteorder::{ByteOrder, LE};
+use std::io::Write;
+use byteorder::{ByteOrder, WriteBytesExt, LE};
+
+pub const MAGIC_NUMBERS: &[u8] = b"OMG.00.1PSP\0\0\0\0\0";
 
 pub mod file;
 pub mod model;
@@ -23,15 +26,17 @@ impl std::fmt::Display for Error {
 }
 impl std::error::Error for Error {}
 
+type Result<T> = std::result::Result<T, Error>;
+
 #[derive(Debug)]
 pub struct Gmo {
     pub file: file::File,
 }
 
 impl Gmo {
-    pub fn from_bytes(data: &[u8]) -> Result<Self, Error> {
+    pub fn from_bytes(data: &[u8]) -> Result<Self> {
         let magic_numbers = &data[0..16];
-        if magic_numbers != b"OMG.00.1PSP\0\0\0\0\0" {
+        if magic_numbers != MAGIC_NUMBERS {
             return Err(Error::WrongMagicNumbers);
         }
 
@@ -45,6 +50,13 @@ impl Gmo {
             file: file::File::new(file),
         })
     }
+
+    pub fn encode(&self) -> Vec<u8> {
+        let mut buf = Vec::new();
+        buf.write_all(MAGIC_NUMBERS).unwrap();
+        buf.write_all(&self.file.encode()).unwrap();
+        buf
+    }
 }
 
 #[derive(Debug)]
@@ -55,7 +67,7 @@ pub struct ChunkRef<'a> {
 }
 
 impl<'a> ChunkRef<'a> {
-    pub fn read(data: &'a [u8]) -> Result<(Self, usize), Error> {
+    pub fn read(data: &'a [u8]) -> Result<(Self, usize)> {
         if data.len() < 8 {
             return Err(Error::IncompleteChunk);
         }
@@ -109,6 +121,28 @@ impl<'a> Iterator for Chunks<'a> {
 
 pub trait Chunk {
     fn new(chunk: ChunkRef) -> Self;
+
+    fn encode(&self) -> Vec<u8> {
+        let (header, data) = self.encode_impl();
+
+        let data_offset = match header.len() {
+            0 => 0,
+            size => 8+size,
+        } as u16;
+        let chunk_size = (8+header.len()+data.len()) as u32;
+
+        let mut buf = Vec::new();
+        buf.write_u16::<LE>(self.type_()).unwrap();
+        buf.write_u16::<LE>(data_offset).unwrap();
+        buf.write_u32::<LE>(chunk_size).unwrap();
+        buf.write_all(&header).unwrap();
+        buf.write_all(&data).unwrap();
+
+        buf
+    }
+
+    fn type_(&self) -> u16;
+    fn encode_impl(&self) -> (Vec<u8>, Vec<u8>);
 }
 
 #[derive(Debug)]
@@ -125,5 +159,13 @@ impl Chunk for Generic {
             header: chunk.header.to_owned(),
             data: chunk.data.to_owned(),
         }
+    }
+
+    fn type_(&self) -> u16 {
+        self.type_
+    }
+
+    fn encode_impl(&self) -> (Vec<u8>, Vec<u8>) {
+        (self.header.clone(), self.data.clone())
     }
 }
