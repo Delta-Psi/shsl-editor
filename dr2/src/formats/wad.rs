@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::{prelude::*, SeekFrom};
 use std::path::{Path, PathBuf};
+use relative_path::RelativePath;
 
 use crate::errors::*;
 use error_chain::bail;
@@ -296,6 +297,24 @@ impl Wad {
             file.set_len(total_size + new_size)?;
 
             file.write_all(data)?;
+        }
+
+        Ok(())
+    }
+
+    pub fn extract_to(&self, base_path: impl AsRef<Path>) -> Result<()> {
+        let base_path = base_path.as_ref();
+
+        for wad_path in self.files.keys() {
+            let path = RelativePath::new(wad_path).to_path(base_path);
+            if let Some(dir) = path.parent() {
+                std::fs::create_dir_all(dir)
+                    .chain_err(|| "could not create directory")?;
+            }
+
+            let data = self.read_file(&wad_path)?;
+            std::fs::write(path, &data)
+                .chain_err(|| "could not write file")?;
         }
 
         Ok(())
