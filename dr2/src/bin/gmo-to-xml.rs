@@ -1,4 +1,3 @@
-use dr2::formats::gmo::MAGIC_NUMBERS;
 use byteorder::{ByteOrder, LE};
 use xml::writer::{EventWriter, EmitterConfig, XmlEvent};
 use std::io::prelude::*;
@@ -64,6 +63,14 @@ fn process_chunk(w: &mut EventWriter<impl Write>, data: &[u8]) -> Option<usize> 
     Some(chunk_size)
 }
 
+fn gmo_to_xml(w: &mut EventWriter<impl Write>, data: &[u8]) {
+    use dr2::formats::gmo::MAGIC_NUMBERS;
+    assert_eq!(&data[0..16], MAGIC_NUMBERS);
+    let data = &data[16..];
+
+    process_chunk(w, data);
+}
+
 fn main() {
     let gmo_path = std::env::args().nth(1).unwrap();
     let data = std::fs::read(gmo_path).unwrap();
@@ -74,8 +81,5 @@ fn main() {
         .perform_indent(true)
         .create_writer(&mut stdout);
 
-    assert_eq!(&data[0..16], MAGIC_NUMBERS);
-    let data = &data[16..];
-
-    process_chunk(&mut writer, data);
+    gmo_to_xml(&mut writer, &data);
 }
