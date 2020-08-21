@@ -1,0 +1,16 @@
+0x429c10: loads a file from a wad, returns pointer. arguments are filename, unknown flag, (pointer or zero)
+0x413f50: free() wrapper (used with result of prev function)
+
+0x428e30: constructs the path of a file inside a wad (!!!!). rdi is a pointer to the output buffer
+
+======
+
+0x59a070: fread thread routine, i think. has a single argument, which seems to be a struct
+0x5989b0: immediately called by prev. has two args
+
+0x5dc4d0: fread wrapper w/ mutex business. arguments are rdi (a struct described below), rsi (output buffer), rdx (file size). returns read byte amt
+    typedef _struct0 struct {
+        pthread_mutex_t wad_mutex; // 0x10
+        FILE* wad; // 0x70
+        ...
+    };
