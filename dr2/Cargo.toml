@@ -18,3 +18,4 @@ serde = { version = "1.0.114", features = ["derive"] }
 relative-path = { version = "1.3.2", features = ["serde"] }
 obj = "0.10.1"
 hex = "0.4.2"
+xml-rs = "0.8.3"
