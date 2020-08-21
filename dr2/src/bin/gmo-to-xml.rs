@@ -21,11 +21,6 @@ fn process_chunk(w: &mut EventWriter<impl Write>, data: &[u8]) -> Option<usize> 
     let header = &data[8 .. data_offset];
     let chunk_data = &data[data_offset .. chunk_size];
 
-    w.write(XmlEvent::start_element("chunk")
-            .attr("type", &format!("{:04x}", type_))
-            .attr("header", &hex::encode(header)))
-        .unwrap();
-
     match match type_ {
         0x0002 => Some("file"),
         0x0003 => Some("subfile"),
@@ -44,6 +39,11 @@ fn process_chunk(w: &mut EventWriter<impl Write>, data: &[u8]) -> Option<usize> 
         Some(type_) => w.write(XmlEvent::comment(type_)).unwrap(),
         None => (),
     };
+
+    w.write(XmlEvent::start_element("chunk")
+            .attr("type", &format!("{:04x}", type_))
+            .attr("header", &hex::encode(header)))
+        .unwrap();
 
     let mut data = chunk_data;
     while !data.is_empty() {
@@ -68,7 +68,9 @@ fn gmo_to_xml(w: &mut EventWriter<impl Write>, data: &[u8]) {
     assert_eq!(&data[0..16], MAGIC_NUMBERS);
     let data = &data[16..];
 
+    w.write(XmlEvent::start_element("gmo")).unwrap();
     process_chunk(w, data);
+    w.write(XmlEvent::end_element()).unwrap();
 }
 
 fn main() {
