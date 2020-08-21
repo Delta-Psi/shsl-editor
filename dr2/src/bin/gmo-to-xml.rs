@@ -32,6 +32,7 @@ fn process_chunk(w: &mut EventWriter<impl Write>, data: &[u8]) -> Option<usize> 
         0x0009 => Some("texture reference"),
         0x000a => Some("texture"),
 
+        0x8012 => Some("texture path"),
         0x8066 => Some("mesh index data"),
 
         _ => None,
@@ -68,9 +69,9 @@ fn gmo_to_xml(w: &mut EventWriter<impl Write>, data: &[u8]) {
     assert_eq!(&data[0..16], MAGIC_NUMBERS);
     let data = &data[16..];
 
-    w.write(XmlEvent::start_element("gmo")).unwrap();
+    //w.write(XmlEvent::start_element("gmo")).unwrap();
     process_chunk(w, data);
-    w.write(XmlEvent::end_element()).unwrap();
+    //w.write(XmlEvent::end_element()).unwrap();
 }
 
 fn main() {
