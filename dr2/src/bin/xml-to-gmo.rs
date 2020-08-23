@@ -37,7 +37,8 @@ fn process_chunk(r: &mut EventReader<impl Read>, type_: u16, header: &[u8]) -> O
                                 name,
                             } if name.local_name == "data" => break,
 
-                            XmlEvent::Characters(data) => {
+                            XmlEvent::Characters(mut data) => {
+                                data.retain(|c| !c.is_whitespace());
                                 chunk_data.append(&mut hex::decode(&data).unwrap());
                             },
 
