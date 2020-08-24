@@ -34,6 +34,7 @@ pub struct Config {
     pub dialogue: bool,
     pub music: bool,
     pub report_card: bool,
+    pub models: bool,
 
     pub extra: Vec<String>,
 }
@@ -43,6 +44,7 @@ pub mod scripts;
 pub mod dialogue;
 pub mod music;
 pub mod report_card;
+pub mod models;
 
 pub fn extract(project: &mut Project, files: &GameFiles) -> Result<()> {
     let config = project.config().game_data.clone();
@@ -78,6 +80,10 @@ pub fn extract(project: &mut Project, files: &GameFiles) -> Result<()> {
     }
     if config.music {
         music::extract(project, files)?;
+    }
+
+    if config.models {
+        models::sprites::extract(project, files)?;
     }
 
     Ok(())
@@ -117,6 +123,9 @@ pub fn inject(project: &mut Project, files: &mut GameFiles) -> Result<()> {
     }
     if config.music {
         music::inject(project, files)?;
+    }
+    if config.models {
+         //models::sprites::inject(project, files)?;
     }
 
     Ok(())
