@@ -15,6 +15,9 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+private slots:
+    void on_actionOpen_game_directory_triggered();
+
 private:
     Ui::MainWindow *ui;
 };
