@@ -1,7 +1,9 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <QLabel>
 #include <QMainWindow>
+#include <QStandardItemModel>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -16,9 +18,13 @@ public:
     ~MainWindow();
 
 private slots:
-    void on_actionOpen_game_directory_triggered();
+    void on_actionOpen_Project_triggered();
 
 private:
     Ui::MainWindow *ui;
+    QLabel projectStatusLabel;
+
+    QStandardItemModel wadListModel;
+    QStandardItemModel wadFilesModel;
 };
 #endif // MAINWINDOW_H

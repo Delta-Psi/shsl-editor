@@ -36,21 +36,31 @@ public:
     };
 
     Wad(const QString& path);
+    bool open();
 
     const QHash<QString, int>& files() const
     {
         return fileMap;
     }
-    const QHash<QString, int>& dirs() const
+    /*const QHash<QString, int>& dirs() const
     {
         return dirMap;
-    }
+    }*/
 
     bool containsFile(const QString& path) const
     {
         return fileMap.contains(path);
     }
     QByteArray readFile(const QString& path);
+
+    /*bool containsDir(const QString& path) const
+    {
+        return dirMap.contains(path);
+    }
+    const QVector<Dir::Subfile>& subfiles(QString& path) const {
+        int index = dirMap[path];
+        return dirList[index].subfiles;
+    }*/
 
 private:
     QFile handle;

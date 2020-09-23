@@ -6,7 +6,15 @@
 Wad::Wad(const QString &path):
     handle(path)
 {
-    handle.open(QIODevice::ReadOnly);
+}
+
+bool Wad::open()
+{
+    if (!handle.open(QIODevice::ReadOnly))
+    {
+        return false;
+    }
+
     QDataStream stream(&handle);
     stream.setByteOrder(QDataStream::LittleEndian);
 
@@ -14,7 +22,10 @@ Wad::Wad(const QString &path):
     QByteArray buffer;
     buffer.resize(4);
     stream.readRawData(buffer.data(), buffer.size());
-    Q_ASSERT(buffer == "AGAR");
+    if (buffer != "AGAR")
+    {
+        return false;
+    }
 
     // read version
     quint32 versionMajor = 0, versionMinor = 0;
@@ -89,6 +100,8 @@ Wad::Wad(const QString &path):
             dir.subfiles.append(Dir::Subfile(name, isDirectory != 0));
         }
     }
+
+    return true;
 }
 
 QByteArray Wad::readFile(const QString &path)
