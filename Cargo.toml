@@ -1,3 +1,0 @@
-[workspace]
-
-members = ["dr2", "cli"]
