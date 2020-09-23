@@ -40,9 +40,33 @@ class ImportGMO(bpy.types.Operator, bpy_extras.io_utils.ImportHelper):
 
         return {'FINISHED'}
 
+@orientation_helper(axis_forward='-Z', axis_up='Y')
+class ExportGMO(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
+    """Save a GMO file."""
+    bl_idname = "export_scene.gmo"
+    bl_label = "GMO (.gmo)"
+    bl_options = {'PRESET'}
+
+    filename_ext = ".gmo"
+    filter_glob: StringProperty(
+                default="*.gmo",
+                options={'HIDDEN'},
+                )
+
+    def execute(self, context):
+        global_matrix = axis_conversion(
+            to_forward=self.axis_forward,
+            to_up=self.axis_up,
+        ).to_4x4();
+
+        export_gmo(context, self.filepath, global_matrix)
+
+        return {'FINISHED'}
+
 if __name__ == "__main__":
     bpy.utils.register_class(ImportGMO)
     #bpy.types.TOPBAR_MT_file_import.append(lambda self, context: self.layout.operator(ImportGMO.bl_idname, text="GMO (.gmo)"))
+    bpy.utils.register_class(ExportGMO)
 
 #############################################
 
@@ -322,7 +346,44 @@ def read_mesh_data(mesh, bm, arrays, materials, index, header, data):
 def import_bone_info(header, data):
     return None
 
-#import_gmo(bpy.context, "/run/media/delta/work/steam/steamapps/common/Danganronpa 2 Goodbye Despair/dr2_data/Dr2/data/all/model/stand_00_00.gmo", axis_conversion(
-#            from_forward='-Z',
-#            from_up='Y',
-#        ).to_4x4());
+###########################
+
+def export_gmo(context, filepath, global_matrix):
+    collection = context.collection
+    data = b"OMG.00.1PSP\0\0\0\0\0"
+
+    data += export_file(collection, global_matrix)
+
+    with open(filepath, 'wb') as file:
+        file.write(data)
+
+def encode_chunk(type, header, data):
+    header_size = 8+len(header) if len(header) > 0 else 0
+    data = struct.pack('<HHI', type, header_size, 8+len(header)+len(data))
+    data += header
+    data += data
+
+    return data
+
+def export_file(collection, global_matrix):
+    type = 0x0002
+    header = bytes.fromhex(b'10000000 00000000')
+    data = b''
+
+    for subfile_collection in collection.children:
+        data += export_subfile(subfile_collection, global_matrix)
+
+    return encode_chunk(type, header, data)
+
+def export_subfile(collection, global_matrix):
+    type = 0x0003
+    header = bytes.fromhex(b'10000000 00000000')
+    data = b''
+
+    data += encode_chunk(0x8014, b'', b'')
+
+    # bones -> model surfaces -> materials -> textures
+
+    for object in collection.objects:
+        # TODO
+        pass
