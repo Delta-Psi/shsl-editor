@@ -74,7 +74,6 @@ bool Wad::open()
         pathData.resize(pathSize);
         stream.readRawData(pathData.data(), pathData.size()); headerSize += pathSize;
         QString path(pathData);
-        qDebug() << path;
 
         dirList.append(Dir(path));
         dirMap.insert(path, i);

@@ -5,6 +5,9 @@
 #include <QMainWindow>
 #include <QStandardItemModel>
 
+#include "qhexedit.h"
+#include "wad.h"
+
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -20,9 +23,16 @@ public:
 private slots:
     void on_actionSet_Game_Directory_triggered();
 
+    void on_wadFileTree_clicked(const QModelIndex &index);
+
 private:
     Ui::MainWindow *ui;
+
+    QHexEdit* hexEdit;
+
     QLabel projectStatusLabel;
+
+    Wad *wad;
 
     QStandardItemModel wadListModel;
     QStandardItemModel wadFilesModel;
