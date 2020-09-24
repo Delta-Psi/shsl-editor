@@ -36,7 +36,7 @@
            <property name="orientation">
             <enum>Qt::Vertical</enum>
            </property>
-           <widget class="QListView" name="wadList">
+           <widget class="QListWidget" name="wadList">
             <property name="enabled">
              <bool>false</bool>
             </property>
@@ -60,9 +60,6 @@
             <property name="uniformRowHeights">
              <bool>true</bool>
             </property>
-            <attribute name="headerVisible">
-             <bool>false</bool>
-            </attribute>
             <attribute name="headerStretchLastSection">
              <bool>false</bool>
             </attribute>
@@ -80,6 +77,12 @@
              <string>Hex View</string>
             </attribute>
             <layout class="QGridLayout" name="gridLayout_2"/>
+           </widget>
+           <widget class="QWidget" name="wadFileImageTab">
+            <attribute name="title">
+             <string>Image View</string>
+            </attribute>
+            <layout class="QVBoxLayout" name="verticalLayout"/>
            </widget>
           </widget>
          </widget>

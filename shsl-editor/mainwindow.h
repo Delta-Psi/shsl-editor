@@ -6,6 +6,7 @@
 #include <QStandardItemModel>
 
 #include "qhexedit.h"
+#include "imagedetailview.h"
 #include "wad.h"
 
 QT_BEGIN_NAMESPACE
@@ -28,13 +29,13 @@ private slots:
 private:
     Ui::MainWindow *ui;
 
-    QHexEdit* hexEdit;
+    QHexEdit *hexEdit;
+    ImageDetailView *imageView;
 
     QLabel projectStatusLabel;
 
     Wad *wad;
 
-    QStandardItemModel wadListModel;
     QStandardItemModel wadFilesModel;
 };
 #endif // MAINWINDOW_H
