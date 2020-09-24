@@ -42,25 +42,16 @@ public:
     {
         return fileMap;
     }
-    /*const QHash<QString, int>& dirs() const
-    {
-        return dirMap;
-    }*/
 
-    bool containsFile(const QString& path) const
+    int fileIndex(const QString& path) const
     {
-        return fileMap.contains(path);
+        return fileMap.value(path, -1);
     }
-    QByteArray readFile(const QString& path);
-
-    /*bool containsDir(const QString& path) const
+    quint64 fileSize(int index) const
     {
-        return dirMap.contains(path);
+        return fileList[index].size;
     }
-    const QVector<Dir::Subfile>& subfiles(QString& path) const {
-        int index = dirMap[path];
-        return dirList[index].subfiles;
-    }*/
+    QByteArray readFile(int index);
 
 private:
     QFile handle;

@@ -35,9 +35,10 @@ MainWindow::~MainWindow()
     if (wad) delete wad;
 }
 
-void setupWadFilesModel(QStandardItemModel& model, const Wad* wad)
+void setupWadFilesModel(QStandardItemModel& model, const Wad* wad, const QLocale &locale)
 {
     model.clear();
+    model.setColumnCount(2);
 
     QHash<QStringRef, QStandardItem*> paths;
 
@@ -49,7 +50,7 @@ void setupWadFilesModel(QStandardItemModel& model, const Wad* wad)
 
         // ensure elements for each parent directory exist
         QStandardItem* parent = root;
-        for(int i = 0; i < split.size(); ++i)
+        for(int i = 0; i < split.size()-1; ++i)
         {
             QStringRef currPath = path.leftRef(split[i].position() + split[i].size());
 
@@ -65,6 +66,13 @@ void setupWadFilesModel(QStandardItemModel& model, const Wad* wad)
                 parent = current;
             }
         }
+
+        QStandardItem* current = new QStandardItem(QString(split[split.size()-1].data(), split[split.size()-1].size()));
+        current->setData(QVariant(path));
+
+        quint64 size = wad->fileSize(it.value());
+        QString sizeString = locale.formattedDataSize(size);
+        parent->appendRow({current, new QStandardItem(sizeString)});
     }
 
     model.sort(0);
@@ -72,9 +80,12 @@ void setupWadFilesModel(QStandardItemModel& model, const Wad* wad)
 
 void MainWindow::on_actionSet_Game_Directory_triggered()
 {
-    QDir path(QFileDialog::getExistingDirectory(this, tr("Set Game Directory")));
+    QString path = QFileDialog::getExistingDirectory(this, tr("Set Game Directory"));
+    if (path == "") return;
+    QDir dir(path);
+
     if (wad) delete wad;
-    wad = new Wad(path.filePath("dr2_data.wad"));
+    wad = new Wad(dir.filePath("dr2_data.wad"));
     if (!wad->open())
     {
         statusBar()->showMessage("could not open game files");
@@ -82,7 +93,8 @@ void MainWindow::on_actionSet_Game_Directory_triggered()
         wad = nullptr;
     } else {
         ui->wadFileTree->setEnabled(true);
-        setupWadFilesModel(wadFilesModel, wad);
+        setupWadFilesModel(wadFilesModel, wad, locale());
+        ui->wadFileTree->header()->setSectionResizeMode(0, QHeaderView::Stretch);
 
         ui->wadList->setEnabled(true);
         wadListModel.clear();
@@ -99,11 +111,13 @@ void MainWindow::on_wadFileTree_clicked(const QModelIndex &index)
     Q_ASSERT(item);
     QString path = item->data().toString();
 
-    if (!wad->containsFile(path)) return;
-    QByteArray data = wad->readFile(path);
+    int fileIndex = wad->fileIndex(path);
+    if (fileIndex == -1) return;
+    QByteArray data = wad->readFile(fileIndex);
 
     ui->wadFileTabs->setEnabled(true);
 
     hexEdit->setEnabled(true);
     hexEdit->setData(data);
+    hexEdit->setAddressArea(true);
 }

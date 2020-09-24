@@ -103,9 +103,8 @@ bool Wad::open()
     return true;
 }
 
-QByteArray Wad::readFile(const QString &path)
+QByteArray Wad::readFile(int index)
 {
-    int index = fileMap.value(path);
     const File& file = fileList.at(index);
 
     quint64 offset = headerSize + file.offset;

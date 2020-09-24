@@ -57,6 +57,15 @@
             <property name="editTriggers">
              <set>QAbstractItemView::NoEditTriggers</set>
             </property>
+            <property name="uniformRowHeights">
+             <bool>true</bool>
+            </property>
+            <attribute name="headerVisible">
+             <bool>false</bool>
+            </attribute>
+            <attribute name="headerStretchLastSection">
+             <bool>false</bool>
+            </attribute>
            </widget>
           </widget>
           <widget class="QTabWidget" name="wadFileTabs">
