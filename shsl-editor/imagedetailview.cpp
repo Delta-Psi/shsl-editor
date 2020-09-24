@@ -9,7 +9,10 @@ ImageDetailView::ImageDetailView(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    ui->splitter->setStretchFactor(0, 2);
+
     ui->graphicsView->setScene(&scene);
+    ui->paletteView->hide();
 }
 
 ImageDetailView::~ImageDetailView()
@@ -20,6 +23,8 @@ ImageDetailView::~ImageDetailView()
 bool ImageDetailView::display(const QByteArray &data/*, ImageDetailView::ImageFormat format*/)
 {
     scene.clear();
+    ui->paletteView->hide();
+    ui->details->clear();
 
     if (pixmap.loadFromData((const uchar*)data.data(), data.size()))
     {
@@ -32,6 +37,14 @@ bool ImageDetailView::display(const QByteArray &data/*, ImageDetailView::ImageFo
         tga::Decoder decoder(&intf);
         tga::Header header;
         if (!decoder.readHeader(header)) return false;
+
+        ui->details->setColumnCount(1);
+        ui->details->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
+        ui->details->setRowCount(1);
+        ui->details->setVerticalHeaderLabels({tr("Format")});
+
+        ui->details->setItem(0, 0, new QTableWidgetItem(tr("TGA")));
+
 
         tga::Image tgaImage;
         tgaImage.bytesPerPixel = header.bytesPerPixel();
@@ -58,15 +71,21 @@ bool ImageDetailView::display(const QByteArray &data/*, ImageDetailView::ImageFo
 
         if (header.hasColormap())
         {
+            ui->paletteView->clearContents();
             image.setColorCount(header.colormapLength);
             for(int i = 0; i < header.colormapLength; ++i)
             {
-                image.setColor(i, qRgba(
-                                   tga::getr(header.colormap[i]),
+                QRgb color = qRgba(tga::getr(header.colormap[i]),
                                    tga::getg(header.colormap[i]),
                                    tga::getb(header.colormap[i]),
-                                   tga::geta(header.colormap[i])));
+                                   tga::geta(header.colormap[i]));
+                image.setColor(i, color);
+
+                QTableWidgetItem *item = new QTableWidgetItem("");
+                item->setBackground(QBrush(color));
+                ui->paletteView->setItem(i/16, i%16, item);
             }
+            ui->paletteView->show();
         }
 
         if (!pixmap.convertFromImage(image))

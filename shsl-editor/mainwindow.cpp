@@ -89,7 +89,7 @@ void setupWadFilesModel(QStandardItemModel& model, const Wad* wad, const MainWin
         } else if (path.endsWith("gmo")) {
             type = mw->tr("model");
         } else if (path.endsWith("png")) {
-            type = mw->tr("PNG texture");
+            type = mw->tr("PNG image");
         } else if (path.endsWith("pak")) {
             type = mw->tr("PAK container");
         } else if (path.endsWith("ttf")) {
