@@ -1,3 +1,6 @@
 [submodule "qhexedit2"]
 	path = qhexedit2
 	url = https://github.com/Simsys/qhexedit2
+[submodule "tga"]
+	path = tga
+	url = https://github.com/aseprite/tga
