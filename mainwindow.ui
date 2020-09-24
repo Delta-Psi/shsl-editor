@@ -14,8 +14,8 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QGridLayout" name="gridLayout">
-    <item row="0" column="0">
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
      <widget class="QTabWidget" name="tabs">
       <property name="currentIndex">
        <number>1</number>
@@ -26,16 +26,16 @@
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout_2">
         <item>
-         <widget class="QListView" name="listView"/>
+         <widget class="QListView" name="projectInfo"/>
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="files">
+      <widget class="QWidget" name="gameFiles">
        <attribute name="title">
         <string>Game Files</string>
        </attribute>
-       <layout class="QHBoxLayout" name="horizontalLayout">
-        <item>
+       <layout class="QGridLayout" name="gridLayout">
+        <item row="0" column="0">
          <widget class="QListView" name="wadList">
           <property name="enabled">
            <bool>false</bool>
@@ -51,7 +51,19 @@
           </property>
          </widget>
         </item>
-        <item>
+        <item row="0" column="1" rowspan="2">
+         <widget class="QTabWidget" name="wadFileTabs">
+          <property name="currentIndex">
+           <number>0</number>
+          </property>
+          <widget class="QWidget" name="wadFileHex">
+           <attribute name="title">
+            <string>Hex View</string>
+           </attribute>
+          </widget>
+         </widget>
+        </item>
+        <item row="1" column="0">
          <widget class="QTreeView" name="wadFileTree">
           <property name="enabled">
            <bool>false</bool>
@@ -78,39 +90,54 @@
    </property>
    <widget class="QMenu" name="menuFile">
     <property name="title">
-     <string>File</string>
+     <string>&amp;File</string>
     </property>
     <addaction name="actionNew_Project"/>
     <addaction name="actionOpen_Project"/>
     <addaction name="separator"/>
     <addaction name="actionClose_Project"/>
+    <addaction name="separator"/>
+    <addaction name="actionSet_Game_Directory"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <action name="actionOpen_game_directory">
-   <property name="text">
-    <string>New Project...</string>
-   </property>
-  </action>
-  <action name="actionOpen_project">
-   <property name="text">
-    <string>Open Project...</string>
-   </property>
-  </action>
   <action name="actionNew_Project">
    <property name="text">
-    <string>New Project...</string>
+    <string>&amp;New Project...</string>
+   </property>
+   <property name="shortcut">
+    <string>N</string>
+   </property>
+   <property name="shortcutContext">
+    <enum>Qt::WidgetShortcut</enum>
    </property>
   </action>
   <action name="actionOpen_Project">
    <property name="text">
-    <string>Open Project...</string>
+    <string>&amp;Open Project...</string>
+   </property>
+   <property name="shortcut">
+    <string>O</string>
+   </property>
+   <property name="shortcutContext">
+    <enum>Qt::WidgetShortcut</enum>
    </property>
   </action>
   <action name="actionClose_Project">
    <property name="text">
     <string>Close Project</string>
+   </property>
+  </action>
+  <action name="actionSet_Game_Directory">
+   <property name="text">
+    <string>Set &amp;Game Directory...</string>
+   </property>
+   <property name="shortcut">
+    <string>G</string>
+   </property>
+   <property name="shortcutContext">
+    <enum>Qt::WidgetShortcut</enum>
    </property>
   </action>
  </widget>

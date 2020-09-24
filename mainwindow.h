@@ -18,7 +18,7 @@ public:
     ~MainWindow();
 
 private slots:
-    void on_actionOpen_Project_triggered();
+    void on_actionSet_Game_Directory_triggered();
 
 private:
     Ui::MainWindow *ui;

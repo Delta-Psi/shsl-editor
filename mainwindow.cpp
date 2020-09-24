@@ -59,9 +59,9 @@ void setupWadFilesModel(QStandardItemModel& model, const Wad& wad)
     model.sort(0);
 }
 
-void MainWindow::on_actionOpen_Project_triggered()
+void MainWindow::on_actionSet_Game_Directory_triggered()
 {
-    QDir path(QFileDialog::getExistingDirectory(this, tr("Open Game Directory")));
+    QDir path(QFileDialog::getExistingDirectory(this, tr("Set Game Directory")));
     Wad wad(path.filePath("dr2_data.wad"));
     if (!wad.open())
     {
