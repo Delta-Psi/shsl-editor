@@ -93,4 +93,5 @@ void ImageDetailView::display(const QByteArray &data)
     }
 
     scene.addPixmap(pixmap);
+    ui->graphicsView->setSceneRect(0, 0, pixmap.width(), pixmap.height());
 }
