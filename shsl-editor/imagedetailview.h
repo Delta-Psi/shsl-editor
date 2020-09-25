@@ -14,17 +14,10 @@ class ImageDetailView : public QWidget
     Q_OBJECT
 
 public:
-    enum ImageFormat
-    {
-        IF_Unknown,
-        IF_TGA,
-        IF_PNG,
-    };
-
     explicit ImageDetailView(QWidget *parent = nullptr);
     ~ImageDetailView();
 
-    bool display(const QByteArray &data/*, ImageFormat format = IF_Unknown*/);
+    void display(const QByteArray &data);
 
 private:
     Ui::ImageDetailView *ui;

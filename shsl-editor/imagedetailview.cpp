@@ -1,6 +1,7 @@
 #include "imagedetailview.h"
 #include "ui_imagedetailview.h"
 #include "helper.h"
+#include "error.h"
 #include <QtDebug>
 
 ImageDetailView::ImageDetailView(QWidget *parent) :
@@ -20,7 +21,7 @@ ImageDetailView::~ImageDetailView()
     delete ui;
 }
 
-bool ImageDetailView::display(const QByteArray &data/*, ImageDetailView::ImageFormat format*/)
+void ImageDetailView::display(const QByteArray &data)
 {
     scene.clear();
     ui->paletteView->hide();
@@ -36,7 +37,9 @@ bool ImageDetailView::display(const QByteArray &data/*, ImageDetailView::ImageFo
         MemoryInterface intf((uint8_t*)data.data(), data.size());
         tga::Decoder decoder(&intf);
         tga::Header header;
-        if (!decoder.readHeader(header)) return false;
+        if (!decoder.readHeader(header)) {
+            throw Error("Unknown image format");
+        }
 
         ui->details->setColumnCount(1);
         ui->details->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
@@ -54,7 +57,7 @@ bool ImageDetailView::display(const QByteArray &data/*, ImageDetailView::ImageFo
         if (!decoder.readImage(header, tgaImage, nullptr))
         {
             free(buffer);
-            return false;
+            throw Error("Unknown image format");
         }
 
         QImage::Format format = QImage::Format_Grayscale8;
@@ -62,8 +65,8 @@ bool ImageDetailView::display(const QByteArray &data/*, ImageDetailView::ImageFo
         {
             format = QImage::Format_Indexed8;
         } else {
-            qDebug() << "unimplemented: non-indexed tga";
-            return false;
+            free(buffer);
+            throw Error("Unimplemented (non-indexed tga)");
         }
 
         QImage image(buffer, header.width, header.height, format,
@@ -90,10 +93,9 @@ bool ImageDetailView::display(const QByteArray &data/*, ImageDetailView::ImageFo
 
         if (!pixmap.convertFromImage(image))
         {
-            return false;
+            throw Error("Could not convert image to pixmap");
         }
     }
 
     scene.addPixmap(pixmap);
-    return true;
 }

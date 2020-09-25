@@ -24,7 +24,8 @@ void MemoryInterface::seek(size_t absPos)
 
 uint8_t MemoryInterface::read8()
 {
-    return buffer[position++];
+    if (position < size) return buffer[position++];
+    else return 0;
 }
 
 void MemoryInterface::write8(uint8_t value)

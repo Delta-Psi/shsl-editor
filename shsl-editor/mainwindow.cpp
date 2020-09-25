@@ -1,3 +1,4 @@
+#include "error.h"
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "wad.h"
@@ -111,22 +112,24 @@ void MainWindow::on_actionSet_Game_Directory_triggered()
     QDir dir(path);
 
     if (wad) delete wad;
-    wad = new Wad(dir.filePath("dr2_data.wad"));
-    if (!wad->open())
-    {
-        statusBar()->showMessage("could not open game files");
+    try {
+        wad = new Wad(dir.filePath("dr2_data.wad"));
+    } catch(Error &e) {
         delete wad;
         wad = nullptr;
-    } else {
-        ui->wadFileTree->setEnabled(true);
-        setupWadFilesModel(wadFilesModel, wad, this);
-        ui->wadFileTree->header()->setSectionResizeMode(0, QHeaderView::Stretch);
 
-        ui->wadList->setEnabled(true);
-        ui->wadList->clear();
-        ui->wadList->addItem("dr2_data.wad");
-        ui->wadList->setCurrentRow(0);
+        Error("Could not load WAD file", &e).showAsMessageBox(this);
+        return;
     }
+
+    ui->wadFileTree->setEnabled(true);
+    setupWadFilesModel(wadFilesModel, wad, this);
+    ui->wadFileTree->header()->setSectionResizeMode(0, QHeaderView::Stretch);
+
+    ui->wadList->setEnabled(true);
+    ui->wadList->clear();
+    ui->wadList->addItem("dr2_data.wad");
+    ui->wadList->setCurrentRow(0);
 }
 
 void MainWindow::on_wadFileTree_clicked(const QModelIndex &index)
@@ -147,5 +150,9 @@ void MainWindow::on_wadFileTree_clicked(const QModelIndex &index)
     hexEdit->setData(data);
     hexEdit->setAddressArea(true);
 
-    imageView->display(data);
+    try {
+        imageView->display(data);
+    } catch (Error &e) {
+        statusBar()->showMessage(e.fullMessage());
+    }
 }

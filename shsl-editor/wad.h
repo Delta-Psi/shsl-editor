@@ -36,7 +36,6 @@ public:
     };
 
     Wad(const QString& path);
-    bool open();
 
     const QHash<QString, int>& files() const
     {

@@ -1,3 +1,4 @@
+#include "error.h"
 #include "wad.h"
 
 #include <QDataStream>
@@ -6,13 +7,9 @@
 Wad::Wad(const QString &path):
     handle(path)
 {
-}
-
-bool Wad::open()
-{
     if (!handle.open(QIODevice::ReadOnly))
     {
-        return false;
+        throw Error("Unable to open file");
     }
 
     QDataStream stream(&handle);
@@ -24,7 +21,7 @@ bool Wad::open()
     stream.readRawData(buffer.data(), buffer.size());
     if (buffer != "AGAR")
     {
-        return false;
+        throw Error("Invalid WAD file.");
     }
 
     // read version
@@ -99,8 +96,6 @@ bool Wad::open()
             dir.subfiles.append(Dir::Subfile(name, isDirectory != 0));
         }
     }
-
-    return true;
 }
 
 QByteArray Wad::readFile(int index)

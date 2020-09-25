@@ -20,6 +20,7 @@ SOURCES += \
 
 HEADERS += \
     ../tga/tga.h \
+    error.h \
     helper.h \
     imagedetailview.h \
     mainwindow.h \
