@@ -13,6 +13,7 @@ ImageDetailView::ImageDetailView(QWidget *parent) :
     ui->splitter->setStretchFactor(0, 2);
 
     ui->graphicsView->setScene(&scene);
+
     ui->paletteView->hide();
 }
 
@@ -27,20 +28,12 @@ void ImageDetailView::display(const QByteArray &data)
     ui->paletteView->hide();
     ui->details->clear();
 
-    if (pixmap.loadFromData((const uchar*)data.data(), data.size()))
-    {
-        // probably a PNG
-    }
-    else
-    {
-        // try loading it as a TGA
-        MemoryInterface intf((uint8_t*)data.data(), data.size());
-        tga::Decoder decoder(&intf);
-        tga::Header header;
-        if (!decoder.readHeader(header)) {
-            throw Error("Unknown image format");
-        }
-
+    // try loading it as a TGA
+    MemoryInterface intf((uint8_t*)data.data(), data.size());
+    tga::Decoder decoder(&intf);
+    tga::Header header;
+    if (decoder.readHeader(header)) {
+        // it SHOULD be one. fill out metadata
         ui->details->setColumnCount(1);
         ui->details->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
         ui->details->setRowCount(1);
@@ -48,18 +41,14 @@ void ImageDetailView::display(const QByteArray &data)
 
         ui->details->setItem(0, 0, new QTableWidgetItem(tr("TGA")));
 
-
         tga::Image tgaImage;
         tgaImage.bytesPerPixel = header.bytesPerPixel();
         tgaImage.rowstride = header.width * header.bytesPerPixel();
         uint8_t *buffer = (uint8_t*)malloc(tgaImage.rowstride * header.height);
         tgaImage.pixels = buffer;
-        if (!decoder.readImage(header, tgaImage, nullptr))
-        {
-            free(buffer);
-            throw Error("Unknown image format");
+        if (!decoder.readImage(header, tgaImage, nullptr)) {
+            throw Error("Unable to read TGA pixel data");
         }
-
         QImage::Format format = QImage::Format_Grayscale8;
         if (header.hasColormap())
         {
@@ -70,30 +59,36 @@ void ImageDetailView::display(const QByteArray &data)
         }
 
         QImage image(buffer, header.width, header.height, format,
-            [](void *buffer) {free(buffer);}, buffer);
+                 [](void *buffer) {free(buffer);}, buffer);
 
         if (header.hasColormap())
         {
+            ui->paletteView->show();
             ui->paletteView->clearContents();
             image.setColorCount(header.colormapLength);
             for(int i = 0; i < header.colormapLength; ++i)
             {
                 QRgb color = qRgba(tga::getr(header.colormap[i]),
-                                   tga::getg(header.colormap[i]),
-                                   tga::getb(header.colormap[i]),
-                                   tga::geta(header.colormap[i]));
+                           tga::getg(header.colormap[i]),
+                           tga::getb(header.colormap[i]),
+                           tga::geta(header.colormap[i]));
                 image.setColor(i, color);
 
                 QTableWidgetItem *item = new QTableWidgetItem("");
                 item->setBackground(QBrush(color));
                 ui->paletteView->setItem(i/16, i%16, item);
             }
-            ui->paletteView->show();
         }
 
         if (!pixmap.convertFromImage(image))
         {
             throw Error("Could not convert image to pixmap");
+        }
+    } else {
+        // not a tga! try the generic qt thingie
+        if (!pixmap.loadFromData((const uchar*)data.data(), data.size()))
+        {
+            throw Error("Unknown image format");
         }
     }
 
