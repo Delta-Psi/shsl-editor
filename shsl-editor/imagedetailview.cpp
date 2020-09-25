@@ -55,7 +55,7 @@ void ImageDetailView::display(const QByteArray &data)
             format = QImage::Format_Indexed8;
         } else {
             free(buffer);
-            throw Error("Unimplemented (non-indexed tga)");
+            throw Error("Unimplemented (non-indexed TGA)");
         }
 
         QImage image(buffer, header.width, header.height, format,
