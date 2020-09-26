@@ -12,23 +12,23 @@ SOURCES += \
     ../tga/decoder.cpp \
     ../tga/encoder.cpp \
     ../tga/image_iterator.cpp \
+    gui/imagedetailview.cpp \
+    gui/mainwindow.cpp \
     helper.cpp \
-    imagedetailview.cpp \
     main.cpp \
-    mainwindow.cpp \
     wad.cpp
 
 HEADERS += \
     ../tga/tga.h \
     error.h \
+    gui/imagedetailview.h \
+    gui/mainwindow.h \
     helper.h \
-    imagedetailview.h \
-    mainwindow.h \
     wad.h
 
 FORMS += \
-    imagedetailview.ui \
-    mainwindow.ui
+    gui/imagedetailview.ui \
+    gui/mainwindow.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
