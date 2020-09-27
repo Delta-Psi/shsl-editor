@@ -2,7 +2,7 @@
 #define WAD_H
 
 #include <QFile>
-#include <QHash>
+#include <QMap>
 
 class Wad
 {
@@ -37,14 +37,17 @@ public:
 
     Wad(const QString& path);
 
-    const QHash<QString, int>& files() const
+    const QMap<QString, int>& files() const
     {
         return fileMap;
     }
-
     int fileIndex(const QString& path) const
     {
         return fileMap.value(path, -1);
+    }
+    quint64 fileOffset(int index) const
+    {
+        return fileList[index].offset;
     }
     quint64 fileSize(int index) const
     {
@@ -52,16 +55,29 @@ public:
     }
     QByteArray readFile(int index);
 
+    const QMap<QString, int> &dirs() const
+    {
+        return dirMap;
+    }
+    int dirIndex(const QString &path) const
+    {
+        return dirMap.value(path, -1);
+    }
+    const QVector<Dir::Subfile> &dirSubfiles(int index) const
+    {
+        return dirList[index].subfiles;
+    }
+
 private:
     QFile handle;
 
     quint64 headerSize;
 
     QVector<File> fileList;
-    QHash<QString, int> fileMap;
+    QMap<QString, int> fileMap;
 
     QVector<Dir> dirList;
-    QHash<QString, int> dirMap;
+    QMap<QString, int> dirMap;
 };
 
 #endif // WAD_H

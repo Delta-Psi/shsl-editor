@@ -16,6 +16,7 @@ SOURCES += \
     gui/mainwindow.cpp \
     helper.cpp \
     main.cpp \
+    models/wadfiles.cpp \
     wad.cpp
 
 HEADERS += \
@@ -24,6 +25,7 @@ HEADERS += \
     gui/imagedetailview.h \
     gui/mainwindow.h \
     helper.h \
+    models/wadfiles.h \
     wad.h
 
 FORMS += \

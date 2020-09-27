@@ -5,6 +5,8 @@
 #include <QMainWindow>
 #include <QStandardItemModel>
 
+#include <models/wadfiles.h>
+
 #include "qhexedit.h"
 #include "imagedetailview.h"
 #include "wad.h"
@@ -36,6 +38,6 @@ private:
 
     Wad *wad;
 
-    QStandardItemModel wadFilesModel;
+    WadFilesModel wadFilesModel;
 };
 #endif // MAINWINDOW_H
