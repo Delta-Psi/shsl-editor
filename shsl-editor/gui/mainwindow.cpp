@@ -21,6 +21,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     // set up models
     ui->wadFileTree->setModel(&wadFilesModel);
+    connect(ui->wadFileTree->selectionModel(), &QItemSelectionModel::currentChanged,
+            this, &MainWindow::on_wadFileSelected);
 
     // set up hex view
     hexEdit = new QHexEdit;
@@ -66,17 +68,13 @@ void MainWindow::on_actionSet_Game_Directory_triggered()
     ui->wadList->setCurrentRow(0);
 }
 
-void MainWindow::on_wadFileTree_clicked(const QModelIndex &index)
+void MainWindow::on_wadFileSelected(const QModelIndex &current, const QModelIndex &previous)
 {
+    Q_UNUSED(previous);
     if (!wad) return;
+    if (!wadFilesModel.canReadEntry(current)) return;
 
-    /*QStandardItem *item = wadFilesModel.itemFromIndex(index);
-    Q_ASSERT(item);
-    QString path = item->data().toString();
-
-    int fileIndex = wad->fileIndex(path);
-    if (fileIndex == -1) return;
-    QByteArray data = wad->readFile(fileIndex);
+    QByteArray data = wadFilesModel.readEntry(current);
 
     ui->wadFileTabs->setEnabled(true);
 
@@ -88,5 +86,5 @@ void MainWindow::on_wadFileTree_clicked(const QModelIndex &index)
         imageView->display(data);
     } catch (Error &e) {
         statusBar()->showMessage(e.fullMessage());
-    }*/
+    }
 }

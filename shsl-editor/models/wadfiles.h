@@ -8,9 +8,11 @@ class WadFilesModel : public QAbstractItemModel
 {
     Q_OBJECT
 public:
-    WadFilesModel(const Wad *wad=nullptr);
+    WadFilesModel(Wad *wad=nullptr);
 
-    void setWad(const Wad *wad);
+    void setWad(Wad *wad);
+    bool canReadEntry(const QModelIndex &index);
+    QByteArray readEntry(const QModelIndex &index);
 
 public slots:
     void clear();
@@ -24,7 +26,7 @@ public:
     QVariant data(const QModelIndex &index, int role) const override;
 
 private:
-    const Wad *_wad;
+    Wad *_wad;
 
     struct Entry
     {
@@ -34,7 +36,7 @@ private:
         QString name;
         bool directory, file;
         int index;
-        quint64 offset, size;
+        //quint64 offset, size;
 
         QVector<int> children;
     };

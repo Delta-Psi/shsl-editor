@@ -26,7 +26,7 @@ public:
 private slots:
     void on_actionSet_Game_Directory_triggered();
 
-    void on_wadFileTree_clicked(const QModelIndex &index);
+    void on_wadFileSelected(const QModelIndex &current, const QModelIndex &previous);
 
 private:
     Ui::MainWindow *ui;

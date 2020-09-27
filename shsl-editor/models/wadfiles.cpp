@@ -5,15 +5,27 @@
 #include <algorithm>
 #include <QDebug>
 
-WadFilesModel::WadFilesModel(const Wad *wad)
+WadFilesModel::WadFilesModel(Wad *wad)
     : _wad(wad)
 {
 }
 
-void WadFilesModel::setWad(const Wad *wad)
+void WadFilesModel::setWad(Wad *wad)
 {
     _wad = wad;
     updateEntries();
+}
+
+bool WadFilesModel::canReadEntry(const QModelIndex &index)
+{
+    if (!index.isValid()) return false;
+
+    return entries[index.internalId()].file;
+}
+
+QByteArray WadFilesModel::readEntry(const QModelIndex &index)
+{
+    return _wad->readFile(entries[index.internalId()].index);
 }
 
 void WadFilesModel::clear()
@@ -51,10 +63,8 @@ int WadFilesModel::rowCount(const QModelIndex &parent) const
 
     if (parent.isValid())
     {
-        qDebug() << entries[parent.internalId()].children.size();
         return entries[parent.internalId()].children.size();
     } else {
-        qDebug() << entries[0].children.size();
         return entries[0].children.size();
     }
 }
@@ -69,7 +79,6 @@ int WadFilesModel::columnCount(const QModelIndex &parent) const
 
 QVariant WadFilesModel::data(const QModelIndex &index, int role) const
 {
-    qDebug() << "requesting data of " << index;
     if (!_wad) return QVariant();
 
     if (role == Qt::DisplayRole) {
@@ -80,7 +89,8 @@ QVariant WadFilesModel::data(const QModelIndex &index, int role) const
         } else if (index.column() == 1) {
             if (entry.file)
             {
-                return QLocale().formattedDataSize(entry.size);
+                quint64 size = _wad->fileSize(entry.index);
+                return QLocale().formattedDataSize(size);
             }
         }
     } else if (role == Qt::DecorationRole) {
@@ -109,6 +119,8 @@ void WadFilesModel::updateEntries()
     Entry root;
     root.row = -1;
     root.parent = -1;
+    root.file = false;
+    root.directory = true;
     entries.append(root);
 
     updateEntriesSub(0, "");
@@ -147,8 +159,8 @@ void WadFilesModel::updateEntriesSub(int parentId, const QString &parentPath)
             Q_ASSERT(index >= 0);
             entry.index = index;
 
-            entry.offset = _wad->fileOffset(index);
-            entry.size = _wad->fileSize(index);
+            //entry.offset = _wad->fileOffset(index);
+            //entry.size = _wad->fileSize(index);
         }
 
         int id = entries.size();
