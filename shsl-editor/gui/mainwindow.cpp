@@ -88,3 +88,10 @@ void MainWindow::on_wadFileSelected(const QModelIndex &current, const QModelInde
         statusBar()->showMessage(e.fullMessage());
     }
 }
+
+void MainWindow::on_wadFileTree_customContextMenuRequested(const QPoint &pos)
+{
+    Q_UNUSED(pos);
+    QModelIndex index = ui->wadFileTree->indexAt(pos);
+    wadFilesModel.onRightClick(index, this);
+}

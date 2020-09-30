@@ -28,6 +28,8 @@ private slots:
 
     void on_wadFileSelected(const QModelIndex &current, const QModelIndex &previous);
 
+    void on_wadFileTree_customContextMenuRequested(const QPoint &pos);
+
 private:
     Ui::MainWindow *ui;
 

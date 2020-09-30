@@ -14,6 +14,8 @@ public:
     bool canReadEntry(const QModelIndex &index);
     QByteArray readEntry(const QModelIndex &index);
 
+    void onRightClick(const QModelIndex &index, QWidget *menuParent);
+
 public slots:
     void clear();
 
@@ -43,6 +45,8 @@ private:
     QVector<Entry> entries;
     void updateEntries();
     void updateEntriesSub(int parentId, const QString &parentPath);
+
+    QByteArray readEntry(const Entry &entry);
 };
 
 #endif // WADFILES_H

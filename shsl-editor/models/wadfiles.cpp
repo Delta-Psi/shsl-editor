@@ -4,6 +4,9 @@
 #include <QStyle>
 #include <algorithm>
 #include <QDebug>
+#include <QMenu>
+#include <QFileDialog>
+#include <QSaveFile>
 
 WadFilesModel::WadFilesModel(Wad *wad)
     : _wad(wad)
@@ -25,7 +28,39 @@ bool WadFilesModel::canReadEntry(const QModelIndex &index)
 
 QByteArray WadFilesModel::readEntry(const QModelIndex &index)
 {
-    return _wad->readFile(entries[index.internalId()].index);
+    return readEntry(entries[index.internalId()]);
+}
+
+void WadFilesModel::onRightClick(const QModelIndex &index, QWidget *menuParent)
+{
+    if (!index.isValid()) return;
+
+    quint64 id = index.internalId();
+    const Entry &entry = entries[id];
+    if (entry.directory) return;
+
+    QMenu menu(menuParent);
+
+    QAction saveAs(tr("Save As..."), menuParent);
+    connect(&saveAs, &QAction::triggered,
+            [=](bool) {
+        QFileDialog dialog(menuParent);
+        dialog.setFileMode(QFileDialog::AnyFile);
+        dialog.setAcceptMode(QFileDialog::AcceptSave);
+        if (dialog.exec())
+        {
+            QByteArray data = readEntry(entry);
+            QSaveFile file(dialog.selectedFiles()[0]);
+            if (file.open(QIODevice::WriteOnly))
+            {
+                file.write(data);
+                file.commit();
+            }
+        }
+    });
+    menu.addAction(&saveAs);
+
+    menu.exec(QCursor::pos());
 }
 
 void WadFilesModel::clear()
@@ -179,4 +214,9 @@ void WadFilesModel::updateEntriesSub(int parentId, const QString &parentPath)
     {
         entries[entries[parentId].children[i]].row = i;
     }
+}
+
+QByteArray WadFilesModel::readEntry(const WadFilesModel::Entry &entry)
+{
+    return _wad->readFile(entry.index);
 }
