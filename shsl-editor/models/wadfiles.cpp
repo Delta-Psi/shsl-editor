@@ -23,6 +23,7 @@ bool WadFilesModel::canReadEntry(const QModelIndex &index)
 {
     if (!index.isValid()) return false;
 
+    qDebug() << index;
     return entries[index.internalId()].file;
 }
 

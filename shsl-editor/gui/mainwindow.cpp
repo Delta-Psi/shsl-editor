@@ -20,7 +20,9 @@ MainWindow::MainWindow(QWidget *parent)
     projectStatusLabel.setText("No project loaded");
 
     // set up models
-    ui->wadFileTree->setModel(&wadFilesModel);
+    wadFilesFilter.setSourceModel(&wadFilesModel);
+    wadFilesFilter.setRecursiveFilteringEnabled(true);
+    ui->wadFileTree->setModel(&wadFilesFilter);
     connect(ui->wadFileTree->selectionModel(), &QItemSelectionModel::currentChanged,
             this, &MainWindow::on_wadFileSelected);
 
@@ -33,6 +35,8 @@ MainWindow::MainWindow(QWidget *parent)
     // set up image view
     imageView = new ImageDetailView;
     ui->wadFileImageTab->layout()->addWidget(imageView);
+
+    ui->wadFileTreeFilterReset->setIcon(style()->standardIcon(QStyle::SP_DialogResetButton));
 }
 
 MainWindow::~MainWindow()
@@ -66,15 +70,20 @@ void MainWindow::on_actionSet_Game_Directory_triggered()
     ui->wadList->clear();
     ui->wadList->addItem("dr2_data.wad");
     ui->wadList->setCurrentRow(0);
+
+    ui->wadFileTreeFilter->setEnabled(true);
+    ui->wadFileTreeFilterReset->setEnabled(true);
 }
 
 void MainWindow::on_wadFileSelected(const QModelIndex &current, const QModelIndex &previous)
 {
     Q_UNUSED(previous);
     if (!wad) return;
-    if (!wadFilesModel.canReadEntry(current)) return;
 
-    QByteArray data = wadFilesModel.readEntry(current);
+    QModelIndex index = wadFilesFilter.mapToSource(current);
+    if (!wadFilesModel.canReadEntry(index)) return;
+
+    QByteArray data = wadFilesModel.readEntry(index);
 
     ui->wadFileTabs->setEnabled(true);
 
@@ -93,5 +102,16 @@ void MainWindow::on_wadFileTree_customContextMenuRequested(const QPoint &pos)
 {
     Q_UNUSED(pos);
     QModelIndex index = ui->wadFileTree->indexAt(pos);
+    index = wadFilesFilter.mapToSource(index);
     wadFilesModel.onRightClick(index, this);
+}
+
+void MainWindow::on_wadFileTreeFilter_textChanged(const QString &filter)
+{
+    wadFilesFilter.setFilterFixedString(filter);
+}
+
+void MainWindow::on_wadFileTreeFilterReset_clicked()
+{
+    ui->wadFileTreeFilter->clear();
 }

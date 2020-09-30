@@ -4,6 +4,7 @@
 #include <QLabel>
 #include <QMainWindow>
 #include <QStandardItemModel>
+#include <QSortFilterProxyModel>
 
 #include <models/wadfiles.h>
 
@@ -30,6 +31,10 @@ private slots:
 
     void on_wadFileTree_customContextMenuRequested(const QPoint &pos);
 
+    void on_wadFileTreeFilter_textChanged(const QString &filter);
+
+    void on_wadFileTreeFilterReset_clicked();
+
 private:
     Ui::MainWindow *ui;
 
@@ -40,6 +45,7 @@ private:
 
     Wad *wad;
 
+    QSortFilterProxyModel wadFilesFilter;
     WadFilesModel wadFilesModel;
 };
 #endif // MAINWINDOW_H

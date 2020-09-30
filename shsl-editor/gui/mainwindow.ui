@@ -58,22 +58,61 @@
              </size>
             </property>
            </widget>
-           <widget class="QTreeView" name="wadFileTree">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-            <property name="contextMenuPolicy">
-             <enum>Qt::CustomContextMenu</enum>
-            </property>
-            <property name="editTriggers">
-             <set>QAbstractItemView::NoEditTriggers</set>
-            </property>
-            <property name="uniformRowHeights">
-             <bool>true</bool>
-            </property>
-            <attribute name="headerStretchLastSection">
-             <bool>false</bool>
-            </attribute>
+           <widget class="QWidget" name="verticalLayoutWidget">
+            <layout class="QVBoxLayout" name="verticalLayout">
+             <property name="spacing">
+              <number>0</number>
+             </property>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_3">
+               <property name="spacing">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QLineEdit" name="wadFileTreeFilter">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
+                 <property name="placeholderText">
+                  <string>Filter</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QToolButton" name="wadFileTreeFilterReset">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
+                 <property name="text">
+                  <string/>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <widget class="QTreeView" name="wadFileTree">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="contextMenuPolicy">
+                <enum>Qt::CustomContextMenu</enum>
+               </property>
+               <property name="editTriggers">
+                <set>QAbstractItemView::NoEditTriggers</set>
+               </property>
+               <property name="uniformRowHeights">
+                <bool>true</bool>
+               </property>
+               <attribute name="headerVisible">
+                <bool>false</bool>
+               </attribute>
+               <attribute name="headerStretchLastSection">
+                <bool>false</bool>
+               </attribute>
+              </widget>
+             </item>
+            </layout>
            </widget>
           </widget>
           <widget class="QTabWidget" name="wadFileTabs">
@@ -93,7 +132,7 @@
             <attribute name="title">
              <string>Image View</string>
             </attribute>
-            <layout class="QVBoxLayout" name="verticalLayout"/>
+            <layout class="QGridLayout" name="gridLayout"/>
            </widget>
           </widget>
          </widget>
@@ -169,7 +208,6 @@
  <tabstops>
   <tabstop>projectInfo</tabstop>
   <tabstop>wadFileTabs</tabstop>
-  <tabstop>wadFileTree</tabstop>
   <tabstop>wadList</tabstop>
  </tabstops>
  <resources/>
