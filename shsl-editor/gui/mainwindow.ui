@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>500</width>
-    <height>500</height>
+    <width>705</width>
+    <height>402</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,7 +18,10 @@
     <item>
      <widget class="QTabWidget" name="tabs">
       <property name="currentIndex">
-       <number>1</number>
+       <number>2</number>
+      </property>
+      <property name="documentMode">
+       <bool>true</bool>
       </property>
       <widget class="QWidget" name="tabsPage1">
        <attribute name="title">
@@ -29,6 +32,11 @@
          <widget class="QListView" name="projectInfo"/>
         </item>
        </layout>
+      </widget>
+      <widget class="QWidget" name="tab">
+       <attribute name="title">
+        <string>Backups</string>
+       </attribute>
       </widget>
       <widget class="QWidget" name="tabsPage2">
        <attribute name="title">
@@ -44,19 +52,55 @@
            <property name="orientation">
             <enum>Qt::Vertical</enum>
            </property>
-           <widget class="QListWidget" name="wadList">
+           <widget class="QTableWidget" name="wadList">
             <property name="enabled">
              <bool>false</bool>
             </property>
             <property name="editTriggers">
              <set>QAbstractItemView::NoEditTriggers</set>
             </property>
-            <property name="gridSize">
-             <size>
-              <width>0</width>
-              <height>0</height>
-             </size>
+            <property name="selectionMode">
+             <enum>QAbstractItemView::SingleSelection</enum>
             </property>
+            <property name="selectionBehavior">
+             <enum>QAbstractItemView::SelectRows</enum>
+            </property>
+            <property name="gridStyle">
+             <enum>Qt::SolidLine</enum>
+            </property>
+            <attribute name="verticalHeaderVisible">
+             <bool>false</bool>
+            </attribute>
+            <row>
+             <property name="text">
+              <string>Base</string>
+             </property>
+            </row>
+            <row>
+             <property name="text">
+              <string>Keyboard</string>
+             </property>
+            </row>
+            <column>
+             <property name="text">
+              <string/>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>New Column</string>
+             </property>
+            </column>
+            <item row="0" column="0">
+             <property name="text">
+              <string>Base</string>
+             </property>
+            </item>
+            <item row="1" column="0">
+             <property name="text">
+              <string>Keyboard</string>
+             </property>
+            </item>
            </widget>
            <widget class="QWidget" name="verticalLayoutWidget">
             <layout class="QVBoxLayout" name="verticalLayout">
@@ -120,7 +164,7 @@
             <bool>false</bool>
            </property>
            <property name="currentIndex">
-            <number>1</number>
+            <number>0</number>
            </property>
            <widget class="QWidget" name="wadFileHexTab">
             <attribute name="title">
@@ -148,7 +192,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>500</width>
+     <width>705</width>
      <height>23</height>
     </rect>
    </property>

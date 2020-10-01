@@ -8,14 +8,16 @@
 #include <QFileDialog>
 #include <QSaveFile>
 
-WadFilesModel::WadFilesModel(Wad *wad)
-    : _wad(wad)
+WadFilesModel::WadFilesModel()
+    : _wad(nullptr)
+    , _wad_us(nullptr)
 {
 }
 
-void WadFilesModel::setWad(Wad *wad)
+void WadFilesModel::setWads(Wad *wad, Wad *wad_us)
 {
     _wad = wad;
+    _wad_us = wad_us;
     updateEntries();
 }
 
@@ -44,7 +46,7 @@ void WadFilesModel::onRightClick(const QModelIndex &index, QWidget *menuParent)
 
     QAction saveAs(tr("Save As..."), menuParent);
     connect(&saveAs, &QAction::triggered,
-            [=](bool) {
+        [=](bool) {
         QFileDialog dialog(menuParent);
         dialog.setFileMode(QFileDialog::AnyFile);
         dialog.setAcceptMode(QFileDialog::AcceptSave);
@@ -166,48 +168,90 @@ void WadFilesModel::updateEntries()
 
 void WadFilesModel::updateEntriesSub(int parentId, const QString &parentPath)
 {
-    int dirIndex = _wad->dirIndex(parentPath);
-    const QVector<Wad::Dir::Subfile> &subfiles = _wad->dirSubfiles(dirIndex);
+    QSet<QString> processedSubfiles;
 
-    for(auto subfile = subfiles.begin(); subfile != subfiles.end(); ++subfile)
+    int dirIndex = _wad_us->dirIndex(parentPath);
+    if (dirIndex != -1)
     {
-        Entry entry;
-        entry.parent = parentId;
-        entry.name = subfile->name;
-
-        QString path;
-        if (parentPath.size() > 0) path += parentPath + '/';
-        path += entry.name;
-
-        if (subfile->isDirectory)
+        const QVector<Wad::Dir::Subfile> &subfiles = _wad_us->dirSubfiles(dirIndex);
+        for (const Wad::Dir::Subfile &subfile: subfiles)
         {
-            entry.directory = true;
-            entry.file = false;
+            processedSubfiles.insert(subfile.name);
 
-            int index = _wad->dirIndex(path);
-            Q_ASSERT(index >= 0);
-            entry.index = index;
-        } else {
-            entry.directory = false;
-            entry.file = true;
+            Entry entry;
+            entry.parent = parentId;
+            entry.name = subfile.name;
+            entry.us = true;
 
-            int index = _wad->fileIndex(path);
-            Q_ASSERT(index >= 0);
-            entry.index = index;
+            QString path;
+            if (parentPath.size() > 0) path += parentPath + '/';
+            path += entry.name;
 
-            //entry.offset = _wad->fileOffset(index);
-            //entry.size = _wad->fileSize(index);
-        }
+            if (subfile.isDirectory)
+            {
+                entry.directory = true;
+                entry.file = false;
+            } else {
+                entry.directory = false;
+                entry.file = true;
 
-        int id = entries.size();
-        entries[parentId].children.append(id);
-        entries.append(entry);
+                int index = _wad_us->fileIndex(path);
+                Q_ASSERT(index >= 0);
+                entry.index = index;
+            }
 
-        if (subfile->isDirectory)
-        {
-            updateEntriesSub(id, path);
+            int id = entries.size();
+            entries[parentId].children.append(id);
+            entries.append(entry);
+
+            if (subfile.isDirectory)
+            {
+                updateEntriesSub(id, path);
+            }
         }
     }
+
+    dirIndex = _wad->dirIndex(parentPath);
+    if (dirIndex != -1)
+    {
+        const QVector<Wad::Dir::Subfile> &subfiles = _wad->dirSubfiles(dirIndex);
+        for (const Wad::Dir::Subfile &subfile: subfiles)
+        {
+            if (processedSubfiles.contains(subfile.name)) continue;
+
+            Entry entry;
+            entry.parent = parentId;
+            entry.name = subfile.name;
+            entry.us = false;
+
+            QString path;
+            if (parentPath.size() > 0) path += parentPath + '/';
+            path += entry.name;
+
+            if (subfile.isDirectory)
+            {
+                entry.directory = true;
+                entry.file = false;
+            } else {
+                entry.directory = false;
+                entry.file = true;
+
+                int index = _wad->fileIndex(path);
+                Q_ASSERT(index >= 0);
+                entry.index = index;
+            }
+
+            int id = entries.size();
+            entries[parentId].children.append(id);
+            entries.append(entry);
+
+            if (subfile.isDirectory)
+            {
+                updateEntriesSub(id, path);
+            }
+        }
+    }
+
     std::sort(entries[parentId].children.begin(),
           entries[parentId].children.end(),
           [this](int a, int b)->bool{return entries[a].name < entries[b].name;});
@@ -219,5 +263,10 @@ void WadFilesModel::updateEntriesSub(int parentId, const QString &parentPath)
 
 QByteArray WadFilesModel::readEntry(const WadFilesModel::Entry &entry)
 {
-    return _wad->readFile(entry.index);
+    if (entry.us)
+    {
+        return _wad_us->readFile(entry.index);
+    } else {
+        return _wad->readFile(entry.index);
+    }
 }

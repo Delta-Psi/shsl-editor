@@ -11,7 +11,7 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
-    wad = nullptr;
+    dr2_data = dr2_data_us = nullptr;
 
     ui->setupUi(this);
 
@@ -37,12 +37,14 @@ MainWindow::MainWindow(QWidget *parent)
     ui->wadFileImageTab->layout()->addWidget(imageView);
 
     ui->wadFileTreeFilterReset->setIcon(style()->standardIcon(QStyle::SP_DialogResetButton));
+    ui->wadList->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
-    if (wad) delete wad;
+    if (dr2_data) delete dr2_data;
+    if (dr2_data_us) delete dr2_data_us;
 }
 
 void MainWindow::on_actionSet_Game_Directory_triggered()
@@ -51,25 +53,25 @@ void MainWindow::on_actionSet_Game_Directory_triggered()
     if (path == "") return;
     QDir dir(path);
 
-    if (wad) delete wad;
+    if (dr2_data) delete dr2_data;
+    if (dr2_data_us) delete dr2_data_us;
     try {
-        wad = new Wad(dir.filePath("dr2_data.wad"));
+        dr2_data = new Wad(dir.filePath("dr2_data.wad"));
+        dr2_data_us = new Wad(dir.filePath("dr2_data_us.wad"));
     } catch(Error &e) {
-        delete wad;
-        wad = nullptr;
+        if (dr2_data) delete dr2_data;
+        if (dr2_data_us) delete dr2_data_us;
+        dr2_data = dr2_data_us = nullptr;
 
-        Error("Could not load WAD file", &e).showAsMessageBox(this);
+        Error("Could not load WAD files", &e).showAsMessageBox(this);
         return;
     }
 
     ui->wadFileTree->setEnabled(true);
-    wadFilesModel.setWad(wad);
+    wadFilesModel.setWads(dr2_data, dr2_data_us);
     ui->wadFileTree->header()->setSectionResizeMode(0, QHeaderView::Stretch);
 
     ui->wadList->setEnabled(true);
-    ui->wadList->clear();
-    ui->wadList->addItem("dr2_data.wad");
-    ui->wadList->setCurrentRow(0);
 
     ui->wadFileTreeFilter->setEnabled(true);
     ui->wadFileTreeFilterReset->setEnabled(true);
@@ -78,7 +80,7 @@ void MainWindow::on_actionSet_Game_Directory_triggered()
 void MainWindow::on_wadFileSelected(const QModelIndex &current, const QModelIndex &previous)
 {
     Q_UNUSED(previous);
-    if (!wad) return;
+    if (!current.isValid()) return;
 
     QModelIndex index = wadFilesFilter.mapToSource(current);
     if (!wadFilesModel.canReadEntry(index)) return;

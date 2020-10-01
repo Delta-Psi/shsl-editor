@@ -43,7 +43,7 @@ private:
 
     QLabel projectStatusLabel;
 
-    Wad *wad;
+    Wad *dr2_data, *dr2_data_us;
 
     QSortFilterProxyModel wadFilesFilter;
     WadFilesModel wadFilesModel;
