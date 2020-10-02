@@ -38,6 +38,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     ui->wadFileTreeFilterReset->setIcon(style()->standardIcon(QStyle::SP_DialogResetButton));
     ui->wadList->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
+    ui->wadList->hide(); // until i figure out what to even do with this
 }
 
 MainWindow::~MainWindow()

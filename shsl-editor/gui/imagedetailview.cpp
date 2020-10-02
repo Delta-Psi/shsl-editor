@@ -44,7 +44,8 @@ void ImageDetailView::display(const QByteArray &data)
         tga::Image tgaImage;
         tgaImage.bytesPerPixel = header.bytesPerPixel();
         tgaImage.rowstride = header.width * header.bytesPerPixel();
-        uint8_t *buffer = (uint8_t*)malloc(tgaImage.rowstride * header.height);
+        size_t bufferSize = tgaImage.rowstride * header.height;
+        uint8_t *buffer = (uint8_t*)malloc(bufferSize);
         tgaImage.pixels = buffer;
         if (!decoder.readImage(header, tgaImage, nullptr)) {
             throw Error("Unable to read TGA pixel data");
@@ -53,9 +54,17 @@ void ImageDetailView::display(const QByteArray &data)
         if (header.hasColormap())
         {
             format = QImage::Format_Indexed8;
+        } else if (header.isRgb()) {
+            if (header.bytesPerPixel() != 4) throw Error("Unknown image type: rgb, bpp not 4");
+            // BGRA -> RGBA
+            for (size_t i = 0; i < bufferSize; i += 4)
+            {
+                std::swap(buffer[i], buffer[i+2]);
+            }
+            format = QImage::Format_ARGB32_Premultiplied;
         } else {
-            free(buffer);
-            throw Error("Unimplemented (non-indexed TGA)");
+            if (header.bytesPerPixel() != 1) throw Error("Unknown image type: gray, bpp not 1");
+            format = QImage::Format_Grayscale8;
         }
 
         QImage image(buffer, header.width, header.height, format,
