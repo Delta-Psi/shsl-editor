@@ -23,7 +23,6 @@ bool WadFilesModel::canReadEntry(const QModelIndex &index)
 {
     if (!index.isValid()) return false;
 
-    qDebug() << index;
     return entries[index.internalId()].file;
 }
 
@@ -126,8 +125,8 @@ QVariant WadFilesModel::data(const QModelIndex &index, int role) const
             if (entry.file)
             {
                 Wad *wad = nullptr;
-                if (entry.us) wad = _files->files[GameFiles::DR2_DATA_US];
-                else wad = _files->files[GameFiles::DR2_DATA];
+                if (entry.us) wad = _files->get(GameFiles::DR2_DATA_US);
+                else wad = _files->get(GameFiles::DR2_DATA);
 
                 quint64 size = wad->fileSize(entry.index);
                 return QLocale().formattedDataSize(size);
@@ -172,7 +171,7 @@ void WadFilesModel::updateEntriesSub(int parentId, const QString &parentPath)
 {
     QSet<QString> processedSubfiles;
 
-    Wad *dr2_data_us = _files->files[GameFiles::DR2_DATA_US];
+    Wad *dr2_data_us = _files->get(GameFiles::DR2_DATA_US);
     int dirIndex = dr2_data_us->dirIndex(parentPath);
     if (dirIndex != -1)
     {
@@ -214,7 +213,7 @@ void WadFilesModel::updateEntriesSub(int parentId, const QString &parentPath)
         }
     }
 
-    Wad *dr2_data = _files->files[GameFiles::DR2_DATA];
+    Wad *dr2_data = _files->get(GameFiles::DR2_DATA);
     dirIndex = dr2_data->dirIndex(parentPath);
     if (dirIndex != -1)
     {
@@ -269,8 +268,8 @@ QByteArray WadFilesModel::readEntry(const WadFilesModel::Entry &entry)
 {
     if (entry.us)
     {
-        return _files->files[GameFiles::DR2_DATA_US]->readFile(entry.index);
+        return _files->get(GameFiles::DR2_DATA_US)->readFile(entry.index);
     } else {
-        return _files->files[GameFiles::DR2_DATA]->readFile(entry.index);
+        return _files->get(GameFiles::DR2_DATA)->readFile(entry.index);
     }
 }

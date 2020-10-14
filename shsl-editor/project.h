@@ -4,8 +4,9 @@
 #include <QString>
 #include "wad.h"
 
-struct GameFiles
+class GameFiles
 {
+public:
     enum File
     {
         DR2_DATA=0,
@@ -18,6 +19,9 @@ struct GameFiles
     GameFiles(const QString &gameDir);
     ~GameFiles();
 
+    Wad *get(File index);
+
+private:
     Wad *files[FILE_COUNT];
 };
 

@@ -30,3 +30,9 @@ GameFiles::~GameFiles()
         delete files[i];
     }
 }
+
+Wad *GameFiles::get(GameFiles::File index)
+{
+    Q_ASSERT(index != FILE_COUNT);
+    return files[index];
+}
