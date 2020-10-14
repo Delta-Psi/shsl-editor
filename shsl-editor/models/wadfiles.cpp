@@ -9,15 +9,13 @@
 #include <QSaveFile>
 
 WadFilesModel::WadFilesModel()
-    : _wad(nullptr)
-    , _wad_us(nullptr)
+    : _files(nullptr)
 {
 }
 
-void WadFilesModel::setWads(Wad *wad, Wad *wad_us)
+void WadFilesModel::setFiles(GameFiles *files)
 {
-    _wad = wad;
-    _wad_us = wad_us;
+    _files = files;
     updateEntries();
 }
 
@@ -75,7 +73,7 @@ void WadFilesModel::clear()
 
 QModelIndex WadFilesModel::index(int row, int column, const QModelIndex &parent) const
 {
-    if (!_wad) return QModelIndex();
+    if (!_files) return QModelIndex();
 
     quint64 parentId = 0;
     if (parent.isValid()) parentId = parent.internalId();
@@ -87,7 +85,7 @@ QModelIndex WadFilesModel::index(int row, int column, const QModelIndex &parent)
 
 QModelIndex WadFilesModel::parent(const QModelIndex &child) const
 {
-    if (!_wad) return QModelIndex();
+    if (!_files) return QModelIndex();
 
     const Entry &entry = entries[child.internalId()];
     if (entry.parent <= 0) return QModelIndex();
@@ -96,7 +94,7 @@ QModelIndex WadFilesModel::parent(const QModelIndex &child) const
 
 int WadFilesModel::rowCount(const QModelIndex &parent) const
 {
-    if (!_wad) return 0;
+    if (!_files) return 0;
     if (entries.isEmpty()) return 0;
 
     if (parent.isValid())
@@ -110,14 +108,14 @@ int WadFilesModel::rowCount(const QModelIndex &parent) const
 int WadFilesModel::columnCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
-    if (!_wad) return 0;
+    if (!_files) return 0;
 
     return 2;
 }
 
 QVariant WadFilesModel::data(const QModelIndex &index, int role) const
 {
-    if (!_wad) return QVariant();
+    if (!_files) return QVariant();
 
     if (role == Qt::DisplayRole) {
         const Entry &entry = entries[index.internalId()];
@@ -127,7 +125,11 @@ QVariant WadFilesModel::data(const QModelIndex &index, int role) const
         } else if (index.column() == 1) {
             if (entry.file)
             {
-                quint64 size = _wad->fileSize(entry.index);
+                Wad *wad = nullptr;
+                if (entry.us) wad = _files->files[GameFiles::DR2_DATA_US];
+                else wad = _files->files[GameFiles::DR2_DATA];
+
+                quint64 size = wad->fileSize(entry.index);
                 return QLocale().formattedDataSize(size);
             }
         }
@@ -170,10 +172,11 @@ void WadFilesModel::updateEntriesSub(int parentId, const QString &parentPath)
 {
     QSet<QString> processedSubfiles;
 
-    int dirIndex = _wad_us->dirIndex(parentPath);
+    Wad *dr2_data_us = _files->files[GameFiles::DR2_DATA_US];
+    int dirIndex = dr2_data_us->dirIndex(parentPath);
     if (dirIndex != -1)
     {
-        const QVector<Wad::Dir::Subfile> &subfiles = _wad_us->dirSubfiles(dirIndex);
+        const QVector<Wad::Dir::Subfile> &subfiles = dr2_data_us->dirSubfiles(dirIndex);
         for (const Wad::Dir::Subfile &subfile: subfiles)
         {
             processedSubfiles.insert(subfile.name);
@@ -195,7 +198,7 @@ void WadFilesModel::updateEntriesSub(int parentId, const QString &parentPath)
                 entry.directory = false;
                 entry.file = true;
 
-                int index = _wad_us->fileIndex(path);
+                int index = dr2_data_us->fileIndex(path);
                 Q_ASSERT(index >= 0);
                 entry.index = index;
             }
@@ -211,10 +214,11 @@ void WadFilesModel::updateEntriesSub(int parentId, const QString &parentPath)
         }
     }
 
-    dirIndex = _wad->dirIndex(parentPath);
+    Wad *dr2_data = _files->files[GameFiles::DR2_DATA];
+    dirIndex = dr2_data->dirIndex(parentPath);
     if (dirIndex != -1)
     {
-        const QVector<Wad::Dir::Subfile> &subfiles = _wad->dirSubfiles(dirIndex);
+        const QVector<Wad::Dir::Subfile> &subfiles = dr2_data->dirSubfiles(dirIndex);
         for (const Wad::Dir::Subfile &subfile: subfiles)
         {
             if (processedSubfiles.contains(subfile.name)) continue;
@@ -236,7 +240,7 @@ void WadFilesModel::updateEntriesSub(int parentId, const QString &parentPath)
                 entry.directory = false;
                 entry.file = true;
 
-                int index = _wad->fileIndex(path);
+                int index = dr2_data->fileIndex(path);
                 Q_ASSERT(index >= 0);
                 entry.index = index;
             }
@@ -265,8 +269,8 @@ QByteArray WadFilesModel::readEntry(const WadFilesModel::Entry &entry)
 {
     if (entry.us)
     {
-        return _wad_us->readFile(entry.index);
+        return _files->files[GameFiles::DR2_DATA_US]->readFile(entry.index);
     } else {
-        return _wad->readFile(entry.index);
+        return _files->files[GameFiles::DR2_DATA]->readFile(entry.index);
     }
 }

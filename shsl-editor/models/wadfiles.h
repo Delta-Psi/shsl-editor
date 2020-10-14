@@ -2,6 +2,7 @@
 #define WADFILES_H
 
 #include <QAbstractItemModel>
+#include "project.h"
 #include "wad.h"
 
 class WadFilesModel : public QAbstractItemModel
@@ -10,7 +11,7 @@ class WadFilesModel : public QAbstractItemModel
 public:
     WadFilesModel();
 
-    void setWads(Wad *wad, Wad *wad_us);
+    void setFiles(GameFiles *files);
     bool canReadEntry(const QModelIndex &index);
     QByteArray readEntry(const QModelIndex &index);
 
@@ -28,7 +29,7 @@ public:
     QVariant data(const QModelIndex &index, int role) const override;
 
 private:
-    Wad *_wad, *_wad_us;
+    GameFiles *_files;
 
     struct Entry
     {

@@ -17,6 +17,8 @@ SOURCES += \
     helper.cpp \
     main.cpp \
     models/wadfiles.cpp \
+    project.cpp \
+    script/script.cpp \
     wad.cpp
 
 HEADERS += \
@@ -26,6 +28,8 @@ HEADERS += \
     gui/mainwindow.h \
     helper.h \
     models/wadfiles.h \
+    project.h \
+    script/script.h \
     wad.h
 
 FORMS += \

@@ -6,8 +6,8 @@
 #include <QStandardItemModel>
 #include <QSortFilterProxyModel>
 
-#include <models/wadfiles.h>
-
+#include "project.h"
+#include "models/wadfiles.h"
 #include "qhexedit.h"
 #include "imagedetailview.h"
 #include "wad.h"
@@ -43,7 +43,7 @@ private:
 
     QLabel projectStatusLabel;
 
-    Wad *dr2_data, *dr2_data_us;
+    GameFiles *files;
 
     QSortFilterProxyModel wadFilesFilter;
     WadFilesModel wadFilesModel;

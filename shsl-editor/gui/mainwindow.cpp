@@ -11,7 +11,7 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
-    dr2_data = dr2_data_us = nullptr;
+    files = nullptr;
 
     ui->setupUi(this);
 
@@ -44,8 +44,7 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     delete ui;
-    if (dr2_data) delete dr2_data;
-    if (dr2_data_us) delete dr2_data_us;
+    if (files) delete files;
 }
 
 void MainWindow::on_actionSet_Game_Directory_triggered()
@@ -54,22 +53,17 @@ void MainWindow::on_actionSet_Game_Directory_triggered()
     if (path == "") return;
     QDir dir(path);
 
-    if (dr2_data) delete dr2_data;
-    if (dr2_data_us) delete dr2_data_us;
+    if (files) delete files;
     try {
-        dr2_data = new Wad(dir.filePath("dr2_data.wad"));
-        dr2_data_us = new Wad(dir.filePath("dr2_data_us.wad"));
+        files = new GameFiles(path);
     } catch(Error &e) {
-        if (dr2_data) delete dr2_data;
-        if (dr2_data_us) delete dr2_data_us;
-        dr2_data = dr2_data_us = nullptr;
-
-        Error("Could not load WAD files", &e).showAsMessageBox(this);
+        files = nullptr;
+        e.showAsMessageBox(this);
         return;
     }
 
     ui->wadFileTree->setEnabled(true);
-    wadFilesModel.setWads(dr2_data, dr2_data_us);
+    wadFilesModel.setFiles(files);
     ui->wadFileTree->header()->setSectionResizeMode(0, QHeaderView::Stretch);
 
     ui->wadList->setEnabled(true);

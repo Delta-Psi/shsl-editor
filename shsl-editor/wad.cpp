@@ -9,7 +9,7 @@ Wad::Wad(const QString &path):
 {
     if (!handle.open(QIODevice::ReadOnly))
     {
-        throw Error("Unable to open file");
+        throw Error(QString("Unable to open %1").arg(path));
     }
 
     QDataStream stream(&handle);
@@ -21,7 +21,7 @@ Wad::Wad(const QString &path):
     stream.readRawData(buffer.data(), buffer.size());
     if (buffer != "AGAR")
     {
-        throw Error("Invalid WAD file.");
+        throw Error(QString("Invalid WAD file %1").arg(path));
     }
 
     // read version
