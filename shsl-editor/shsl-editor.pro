@@ -12,6 +12,7 @@ SOURCES += \
     ../tga/decoder.cpp \
     ../tga/encoder.cpp \
     ../tga/image_iterator.cpp \
+    gui/gamefilesview.cpp \
     gui/imagedetailview.cpp \
     gui/mainwindow.cpp \
     helper.cpp \
@@ -24,6 +25,7 @@ SOURCES += \
 HEADERS += \
     ../tga/tga.h \
     error.h \
+    gui/gamefilesview.h \
     gui/imagedetailview.h \
     gui/mainwindow.h \
     helper.h \
@@ -33,6 +35,7 @@ HEADERS += \
     wad.h
 
 FORMS += \
+    gui/gamefilesview.ui \
     gui/imagedetailview.ui \
     gui/mainwindow.ui
 

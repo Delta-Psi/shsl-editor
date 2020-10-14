@@ -11,6 +11,7 @@
 #include "qhexedit.h"
 #include "imagedetailview.h"
 #include "wad.h"
+#include "gamefilesview.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -27,25 +28,12 @@ public:
 private slots:
     void on_actionSet_Game_Directory_triggered();
 
-    void on_wadFileSelected(const QModelIndex &current, const QModelIndex &previous);
-
-    void on_wadFileTree_customContextMenuRequested(const QPoint &pos);
-
-    void on_wadFileTreeFilter_textChanged(const QString &filter);
-
-    void on_wadFileTreeFilterReset_clicked();
-
 private:
     Ui::MainWindow *ui;
 
-    QHexEdit *hexEdit;
-    ImageDetailView *imageView;
-
     QLabel projectStatusLabel;
+    GameFilesView *gameFilesView;
 
     GameFiles *files;
-
-    QSortFilterProxyModel wadFilesFilter;
-    WadFilesModel wadFilesModel;
 };
 #endif // MAINWINDOW_H

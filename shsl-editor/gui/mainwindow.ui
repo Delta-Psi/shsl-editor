@@ -38,147 +38,28 @@
         <string>Backups</string>
        </attribute>
       </widget>
-      <widget class="QWidget" name="tabsPage2">
+      <widget class="QWidget" name="gameFilesTab">
        <attribute name="title">
         <string>Game Files</string>
        </attribute>
-       <layout class="QVBoxLayout" name="verticalLayout_2">
+       <layout class="QVBoxLayout" name="verticalLayout_2"/>
+      </widget>
+      <widget class="QWidget" name="tab_2">
+       <attribute name="title">
+        <string>Scripts</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_3">
         <item>
-         <widget class="QSplitter" name="splitter_2">
+         <widget class="QSplitter" name="splitter_3">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
           </property>
-          <widget class="QSplitter" name="splitter">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
+          <widget class="QTreeView" name="treeView">
+           <property name="editTriggers">
+            <set>QAbstractItemView::NoEditTriggers</set>
            </property>
-           <widget class="QTableWidget" name="wadList">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-            <property name="editTriggers">
-             <set>QAbstractItemView::NoEditTriggers</set>
-            </property>
-            <property name="selectionMode">
-             <enum>QAbstractItemView::SingleSelection</enum>
-            </property>
-            <property name="selectionBehavior">
-             <enum>QAbstractItemView::SelectRows</enum>
-            </property>
-            <property name="gridStyle">
-             <enum>Qt::SolidLine</enum>
-            </property>
-            <attribute name="verticalHeaderVisible">
-             <bool>false</bool>
-            </attribute>
-            <row>
-             <property name="text">
-              <string>Base</string>
-             </property>
-            </row>
-            <row>
-             <property name="text">
-              <string>Keyboard</string>
-             </property>
-            </row>
-            <column>
-             <property name="text">
-              <string/>
-             </property>
-            </column>
-            <column>
-             <property name="text">
-              <string>New Column</string>
-             </property>
-            </column>
-            <item row="0" column="0">
-             <property name="text">
-              <string>Base</string>
-             </property>
-            </item>
-            <item row="1" column="0">
-             <property name="text">
-              <string>Keyboard</string>
-             </property>
-            </item>
-           </widget>
-           <widget class="QWidget" name="verticalLayoutWidget">
-            <layout class="QVBoxLayout" name="verticalLayout">
-             <property name="spacing">
-              <number>0</number>
-             </property>
-             <item>
-              <layout class="QHBoxLayout" name="horizontalLayout_3">
-               <property name="spacing">
-                <number>0</number>
-               </property>
-               <item>
-                <widget class="QLineEdit" name="wadFileTreeFilter">
-                 <property name="enabled">
-                  <bool>false</bool>
-                 </property>
-                 <property name="placeholderText">
-                  <string>Filter</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QToolButton" name="wadFileTreeFilterReset">
-                 <property name="enabled">
-                  <bool>false</bool>
-                 </property>
-                 <property name="text">
-                  <string/>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-             <item>
-              <widget class="QTreeView" name="wadFileTree">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
-               <property name="contextMenuPolicy">
-                <enum>Qt::CustomContextMenu</enum>
-               </property>
-               <property name="editTriggers">
-                <set>QAbstractItemView::NoEditTriggers</set>
-               </property>
-               <property name="uniformRowHeights">
-                <bool>true</bool>
-               </property>
-               <attribute name="headerVisible">
-                <bool>false</bool>
-               </attribute>
-               <attribute name="headerStretchLastSection">
-                <bool>false</bool>
-               </attribute>
-              </widget>
-             </item>
-            </layout>
-           </widget>
           </widget>
-          <widget class="QTabWidget" name="wadFileTabs">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
-           <property name="currentIndex">
-            <number>0</number>
-           </property>
-           <widget class="QWidget" name="wadFileHexTab">
-            <attribute name="title">
-             <string>Hex View</string>
-            </attribute>
-            <layout class="QGridLayout" name="gridLayout_2"/>
-           </widget>
-           <widget class="QWidget" name="wadFileImageTab">
-            <attribute name="title">
-             <string>Image View</string>
-            </attribute>
-            <layout class="QGridLayout" name="gridLayout"/>
-           </widget>
-          </widget>
+          <widget class="QPlainTextEdit" name="plainTextEdit"/>
          </widget>
         </item>
        </layout>
@@ -193,7 +74,7 @@
      <x>0</x>
      <y>0</y>
      <width>705</width>
-     <height>23</height>
+     <height>20</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -251,8 +132,6 @@
  </widget>
  <tabstops>
   <tabstop>projectInfo</tabstop>
-  <tabstop>wadFileTabs</tabstop>
-  <tabstop>wadList</tabstop>
  </tabstops>
  <resources/>
  <connections/>
