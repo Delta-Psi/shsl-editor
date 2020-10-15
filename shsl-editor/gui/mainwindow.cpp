@@ -21,6 +21,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     gameFilesView = new GameFilesView;
     ui->gameFilesTab->layout()->addWidget(gameFilesView);
+
+    scriptsView = new ScriptsView;
+    ui->scriptsTab->layout()->addWidget(scriptsView);
 }
 
 MainWindow::~MainWindow()
@@ -46,4 +49,6 @@ void MainWindow::on_actionSet_Game_Directory_triggered()
 
     gameFilesView->setEnabled(true);
     gameFilesView->setFiles(files);
+    scriptsView->setEnabled(true);
+    scriptsView->setFiles(files);
 }

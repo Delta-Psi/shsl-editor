@@ -7,11 +7,9 @@
 #include <QSortFilterProxyModel>
 
 #include "project.h"
-#include "models/wadfiles.h"
-#include "qhexedit.h"
-#include "imagedetailview.h"
 #include "wad.h"
 #include "gamefilesview.h"
+#include "scriptsview.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -33,6 +31,7 @@ private:
 
     QLabel projectStatusLabel;
     GameFilesView *gameFilesView;
+    ScriptsView *scriptsView;
 
     GameFiles *files;
 };

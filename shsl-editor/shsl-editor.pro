@@ -15,8 +15,10 @@ SOURCES += \
     gui/gamefilesview.cpp \
     gui/imagedetailview.cpp \
     gui/mainwindow.cpp \
+    gui/scriptsview.cpp \
     helper.cpp \
     main.cpp \
+    models/scripts.cpp \
     models/wadfiles.cpp \
     project.cpp \
     script/script.cpp \
@@ -28,7 +30,9 @@ HEADERS += \
     gui/gamefilesview.h \
     gui/imagedetailview.h \
     gui/mainwindow.h \
+    gui/scriptsview.h \
     helper.h \
+    models/scripts.h \
     models/wadfiles.h \
     project.h \
     script/script.h \
@@ -37,7 +41,8 @@ HEADERS += \
 FORMS += \
     gui/gamefilesview.ui \
     gui/imagedetailview.ui \
-    gui/mainwindow.ui
+    gui/mainwindow.ui \
+    gui/scriptsview.ui
 
 OTHER_FILES += checksums.json
 

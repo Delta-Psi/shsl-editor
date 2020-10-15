@@ -29,7 +29,7 @@ public:
     QVariant data(const QModelIndex &index, int role) const override;
 
 private:
-    GameFiles *_files;
+    GameFiles *files;
 
     struct Entry
     {
