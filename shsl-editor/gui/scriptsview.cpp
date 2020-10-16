@@ -46,8 +46,9 @@ void ScriptsView::onScriptSelected(const QModelIndex &current, const QModelIndex
         return;
     }
 
+    QString strings;
     for(const QString &string: script.getStrings()) {
-        ui->scriptEdit->appendPlainText(string);
-        ui->scriptEdit->appendPlainText("\n");
+        strings += string + "\n";
     }
+    ui->scriptEdit->setPlainText(strings);
 }
