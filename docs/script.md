@@ -1,9 +1,31 @@
-# Instructions
+# Script format
+Version 0.1
 
-## text\_count
+The input format is UTF-8 text.
+
+## Syntax
+```
+WHITESPACE : [\r\n\t ]*
+
+SCRIPT : (INSTRUCTION WHITESPACE)*
+
+INSTRUCTION : IDENTIFIER WHITESPACE (ARGUMENT WHITESPACE "," WHITESPACE)* "\n"
+
+ARGUMENT : IDENTIFIER | NUMBER | STRING
+
+IDENTIFIER : [a-zA-Z_] [a-zA-Z0-9_]*
+NUMBER : HEX_NUMBER | DECIMAL_NUMBER
+
+HEX_NUMBER : "0x" [0-9]+
+DECIMAL_NUMBER : [1-9][0-9]*
+```
+
+## Instructions
+
+### text\_count
 Opcode: `0x7000`. This should usually be used as `text_count auto`.
 
-## text
+### text
 Opcode: `0x7002`. Displays text in the dialogue UI. Example use:
 
 ```
@@ -13,7 +35,7 @@ as they are.
 `
 ```
 
-## ui
+### ui
 Opcode: `0x7025`. Use: `ui <element>, <state>`, where `<element>` is one of:
 | Name | Value | Description |
 | ---- | ----- | ----------- |

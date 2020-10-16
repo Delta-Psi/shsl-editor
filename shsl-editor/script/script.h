@@ -8,10 +8,15 @@
 class Script
 {
 public:
-    static Script decode(const QByteArray &data);
+    bool decode(const QByteArray &data);
+
+    const QVector<QString> &getStrings() { return strings; }
 
 private:
     QVector<QString> strings;
+
+    bool readInstructions(const QByteArray &data);
+    bool readStrings(const QByteArray &data);
 };
 
 #endif // SCRIPT_H

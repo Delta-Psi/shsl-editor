@@ -1,5 +1,7 @@
 #include "scripts.h"
 
+#include <QLocale>
+
 ScriptsModel::ScriptsModel():
     wad(nullptr)
 {
@@ -9,6 +11,11 @@ void ScriptsModel::setFiles(GameFiles *files)
 {
     wad = files->get(GameFiles::DR2_DATA_US);
     updateEntries();
+}
+
+QByteArray ScriptsModel::readEntry(const QModelIndex &index)
+{
+    return wad->readFile(entries[index.internalId()].index);
 }
 
 void ScriptsModel::updateEntries()
@@ -59,14 +66,14 @@ QModelIndex ScriptsModel::parent(const QModelIndex &child) const
 
 int ScriptsModel::rowCount(const QModelIndex &parent) const
 {
-    Q_UNUSED(parent);
-    return entries.size();
+    if (parent.isValid()) return 0;
+    else return entries.size();
 }
 
 int ScriptsModel::columnCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
-    return 1;
+    return 2;
 }
 
 QVariant ScriptsModel::data(const QModelIndex &index, int role) const
@@ -76,7 +83,24 @@ QVariant ScriptsModel::data(const QModelIndex &index, int role) const
 
     if (role == Qt::DisplayRole)
     {
-        return QVariant(entry.name);
+        if (index.column() == 0) {
+            return QVariant(entry.name);
+        } else if (index.column() == 1) {
+            quint64 size = wad->fileSize(entry.index);
+            return QLocale().formattedDataSize(size);
+        }
+    }
+
+    return QVariant();
+}
+
+QVariant ScriptsModel::headerData(int section, Qt::Orientation orientation, int role) const
+{
+    if (role == Qt::DisplayRole) {
+        if (orientation == Qt::Horizontal) {
+            if (section == 0) return tr("Name");
+            else return tr("Size");
+        }
     }
 
     return QVariant();

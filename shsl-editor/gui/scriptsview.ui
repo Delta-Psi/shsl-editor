@@ -19,13 +19,20 @@
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
-     <widget class="QListView" name="scriptList"/>
+     <widget class="QTreeView" name="scriptList">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <attribute name="headerStretchLastSection">
+       <bool>false</bool>
+      </attribute>
+     </widget>
      <widget class="QPlainTextEdit" name="scriptEdit">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
       <property name="readOnly">
        <bool>true</bool>
-      </property>
-      <property name="plainText">
-       <string>test</string>
       </property>
      </widget>
     </widget>

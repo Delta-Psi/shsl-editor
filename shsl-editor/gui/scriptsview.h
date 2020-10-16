@@ -28,6 +28,9 @@ private:
 
 public slots:
     void setEnabled(bool e);
+
+private slots:
+    void onScriptSelected(const QModelIndex &current, const QModelIndex &previous);
 };
 
 #endif // SCRIPTSVIEW_H
