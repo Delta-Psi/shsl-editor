@@ -8,7 +8,6 @@ add_executable(shsl-editor
 	models/scripts.cpp
 	models/wadfiles.cpp
 	project.cpp
-	script/script.cpp
 	wad.cpp
 
 	gui/gamefilesview.ui
@@ -26,4 +25,4 @@ target_include_directories(shsl-editor PRIVATE "${PROJECT_SOURCE_DIR}/qhexedit2/
 target_link_libraries(shsl-editor tga)
 
 target_link_libraries(shsl-editor shsl-library)
-target_include_directories(shsl-editor PRIVATE "${PROJECT_BINARY_DIR}")
+target_include_directories(shsl-editor PRIVATE "${PROJECT_BINARY_DIR}/library")

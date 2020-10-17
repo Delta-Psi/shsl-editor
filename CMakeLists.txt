@@ -9,6 +9,14 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
 
+include(FetchContent)
+FetchContent_Declare(
+	Corrosion
+	GIT_REPOSITORY https://github.com/AndrewGaspar/corrosion.git
+	GIT_TAG origin/master # Optionally specify a version tag or branch here
+	)
+FetchContent_MakeAvailable(Corrosion)
+
 # qhexhedit2
 add_library(qhexedit2
 	qhexedit2/src/qhexedit.cpp
@@ -25,14 +33,5 @@ add_library(tga
 	tga/image_iterator.cpp
 )
 
-include(FetchContent)
-FetchContent_Declare(
-	Corrosion
-	GIT_REPOSITORY https://github.com/AndrewGaspar/corrosion.git
-	GIT_TAG origin/master
-	)
-FetchContent_MakeAvailable(Corrosion)
-set(ENV{BINDINGS_OUT_DIR} "fuck")
-corrosion_import_crate(MANIFEST_PATH shsl-library/Cargo.toml)
-
-add_subdirectory(shsl-editor)
+add_subdirectory(library)
+add_subdirectory(editor)
