@@ -25,4 +25,13 @@ add_library(tga
 	tga/image_iterator.cpp
 )
 
+include(FetchContent)
+FetchContent_Declare(
+	Corrosion
+	GIT_REPOSITORY https://github.com/AndrewGaspar/corrosion.git
+	GIT_TAG origin/master
+	)
+FetchContent_MakeAvailable(Corrosion)
+corrosion_import_crate(MANIFEST_PATH shsl-library/Cargo.toml)
+
 add_subdirectory(shsl-editor)
