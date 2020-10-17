@@ -41,17 +41,17 @@ void ScriptsView::onScriptSelected(const QModelIndex &current, const QModelIndex
 
     Q_UNUSED(previous);
     QByteArray scriptData = scriptsModel.readEntry(current);
-    Script* script = decode_script(scriptData.data(), scriptData.size());
+    shsl::Script* script = shsl::decode_script(scriptData.data(), scriptData.size());
     if (!script) {
         return;
     }
 
     QString strings;
-    for(size_t i = 0; i < script_string_count(script); ++i) {
-        Data data = script_string_get(script, i);
+    for(size_t i = 0; i < shsl::script_string_count(script); ++i) {
+        shsl::Data data = shsl::script_string_get(script, i);
         strings += QString::fromUtf8(data.ptr, data.size) + "\n";
     }
     ui->scriptEdit->setPlainText(strings);
 
-    delete_script(script);
+    shsl::delete_script(script);
 }

@@ -10,6 +10,7 @@ fn main() {
         .with_crate(crate_dir)
         .with_language(cbindgen::Language::Cxx)
         .with_include_guard("SHSL_LIBRARY")
+        .with_namespace("shsl")
         .generate()
         .expect("Unable to generate bindings")
         .write_to_file(output_path);
