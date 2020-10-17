@@ -32,6 +32,7 @@ FetchContent_Declare(
 	GIT_TAG origin/master
 	)
 FetchContent_MakeAvailable(Corrosion)
+set(ENV{BINDINGS_OUT_DIR} "fuck")
 corrosion_import_crate(MANIFEST_PATH shsl-library/Cargo.toml)
 
 add_subdirectory(shsl-editor)
