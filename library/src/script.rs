@@ -1,8 +1,12 @@
 use crate::pak::Pak;
 use crate::encoding::decode_utf16_le;
 
+mod instruction;
+pub use instruction::Instruction;
+
 #[derive(Debug)]
 pub struct Script {
+    pub instructions: Vec<Instruction>,
     pub strings: Vec<String>,
 }
 
@@ -15,7 +19,11 @@ impl Script {
             _ => return None,
         }
 
-        // TODO: read instruction data
+        let mut instructions = Vec::new();
+        let mut instruction_data = script_pak.entries[0];
+        while let Some(instruction) = Instruction::read_and_advance(&mut instruction_data) {
+            instructions.push(instruction);
+        }
 
         let strings;
         if script_pak.entries.len() == 2 {
@@ -29,7 +37,19 @@ impl Script {
         }
 
         Some(Script {
-            strings
+            instructions,
+            strings,
         })
+    }
+
+    pub fn decompile(&self) -> String {
+        let mut result = String::new();
+
+        for instruction in &self.instructions {
+            result.push_str(&instruction.decompile(self));
+            result.push('\n');
+        }
+
+        result
     }
 }

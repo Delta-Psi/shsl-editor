@@ -3,7 +3,7 @@ use std::path::Path;
 
 fn main() {
     let crate_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
-    let output_dir = env::var("CMAKECARGO_BUILD_DIR").unwrap();
+    let output_dir = env::var("CMAKECARGO_BUILD_DIR").unwrap_or(env::var("OUT_DIR").unwrap());
     let output_path = Path::new(&output_dir).join("shsl-library.h");
 
     cbindgen::Builder::new()

@@ -11,5 +11,5 @@ libc = "0.2.79"
 [build-dependencies]
 cbindgen = "0.15"
 
-[lib]
-crate-type = ["staticlib"]
+#[lib]
+#crate-type = ["staticlib"]

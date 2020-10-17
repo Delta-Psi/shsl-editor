@@ -1,0 +1,1 @@
+lin instruction sizes are stored in an u8 array in addr 0xa72980. its values are [to be added]
