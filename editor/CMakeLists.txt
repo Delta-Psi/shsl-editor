@@ -9,6 +9,7 @@ add_executable(shsl-editor
 	models/wadfiles.cpp
 	project.cpp
 	wad.cpp
+        scriptsyntaxhighlighter.cpp
 
 	gui/gamefilesview.ui
 	gui/imagedetailview.ui

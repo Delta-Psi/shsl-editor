@@ -6,6 +6,7 @@
 #include "project.h"
 #include "wad.h"
 #include "models/scripts.h"
+#include "scriptsyntaxhighlighter.h"
 
 namespace Ui {
 class ScriptsView;
@@ -25,6 +26,7 @@ private:
     Ui::ScriptsView *ui;
 
     ScriptsModel scriptsModel;
+    ScriptSyntaxHighlighter *syntaxHighlighter;
 
 public slots:
     void setEnabled(bool e);

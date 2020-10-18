@@ -17,6 +17,7 @@ ScriptsView::ScriptsView(QWidget *parent) :
     ui->scriptList->header()->setSectionResizeMode(0, QHeaderView::Stretch);
 
     ui->scriptEdit->document()->setDefaultFont(QFont("monospace"));
+    syntaxHighlighter = new ScriptSyntaxHighlighter(ui->scriptEdit->document());
 }
 
 ScriptsView::~ScriptsView()
