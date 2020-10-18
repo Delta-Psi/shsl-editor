@@ -11,6 +11,10 @@ public:
     // QSyntaxHighlighter interface
 protected:
     void highlightBlock(const QString &text) override;
+
+private:
+    void highlightDefault(const QString &text, int begin, int end);
+    void highlightString(const QString &text, int begin, int end);
 };
 
 #endif // SCRIPTSYNTAXHIGHLIGHTER_H
