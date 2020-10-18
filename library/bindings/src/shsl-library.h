@@ -22,12 +22,11 @@ public:
 		return Script(inner);
 	}
 
-	size_t stringCount() {
-		return ffi::script_string_count(inner);
-	}
-	QString getString(size_t index) {
-		ffi::Data data = ffi::script_string_get(inner, index);
-		return QString::fromUtf8(data.ptr, data.size);
+	QString decompile() {
+		ffi::OwnedData data = ffi::script_decompile(inner);
+		QString result = QString::fromUtf8(data.ptr, data.size);
+		delete_owned_data(data);
+		return result;
 	}
 	
 	~Script() {

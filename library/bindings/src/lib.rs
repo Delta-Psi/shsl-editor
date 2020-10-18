@@ -8,11 +8,34 @@ pub struct Data {
 }
 
 impl Data {
-    unsafe fn from_slice(slice: &[u8]) -> Self {
+    pub unsafe fn from_slice(slice: &[u8]) -> Self {
         Self {
             ptr: slice.as_ptr() as *const c_char,
             size: slice.len(),
         }
+    }
+}
+
+#[repr(C)]
+pub struct OwnedData {
+    pub ptr: *mut c_char,
+    pub size: size_t,
+}
+
+impl OwnedData {
+    pub unsafe fn from_boxed_bytes(bytes: Box<[u8]>) -> Self {
+        let size = bytes.len();
+        Self {
+            ptr: Box::into_raw(bytes) as *mut c_char,
+            size,
+        }
+    }
+}
+
+#[no_mangle]
+pub extern fn delete_owned_data(data: OwnedData) {
+    unsafe {
+        drop(Box::from_raw(data.ptr));
     }
 }
 
@@ -30,23 +53,14 @@ pub extern fn decode_script(data: *const c_char, length: size_t) -> *mut Script 
 }
 
 #[no_mangle]
-pub extern fn script_string_count(script: *const Script) -> size_t {
+pub extern fn script_decompile(script: *const Script) -> OwnedData {
     let script = unsafe {
         script.as_ref().unwrap()
     };
 
-    script.strings.len()
-}
-
-#[no_mangle]
-pub extern fn script_string_get(script: *const Script, index: size_t) -> Data {
-    let script = unsafe {
-        script.as_ref().unwrap()
-    };
-    let string = &script.strings[index];
-
+    let decompiled = script.decompile();
     unsafe {
-        Data::from_slice(string.as_bytes())
+        OwnedData::from_boxed_bytes(decompiled.into_boxed_str().into_boxed_bytes())
     }
 }
 
@@ -54,6 +68,6 @@ pub extern fn script_string_get(script: *const Script, index: size_t) -> Data {
 pub extern fn delete_script(script: *mut Script) {
     assert!(!script.is_null());
     unsafe {
-        Box::from_raw(script);
+        drop(Box::from_raw(script));
     }
 }

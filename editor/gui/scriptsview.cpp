@@ -43,12 +43,8 @@ void ScriptsView::onScriptSelected(const QModelIndex &current, const QModelIndex
     QByteArray scriptData = scriptsModel.readEntry(current);
     try {
 	    Script script = Script::decode(scriptData);
-
-	    QString strings;
-	    for(size_t i = 0; i < script.stringCount(); ++i) {
-		    strings += script.getString(i) + "\n";
-	    }
-	    ui->scriptEdit->setPlainText(strings);
+	    QString decompiled = script.decompile();
+	    ui->scriptEdit->setPlainText(decompiled);
     } catch(...) {
 	    return;
     }
