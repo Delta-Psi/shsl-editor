@@ -75,7 +75,27 @@ void ScriptSyntaxHighlighter::highlightDefault(const QString &text, int begin, i
     }
 }
 
-void ScriptSyntaxHighlighter::highlightString(const QString &text, int offset, int end)
+void ScriptSyntaxHighlighter::highlightString(const QString &text, int begin, int end)
 {
-    setFormat(offset, end - offset, Qt::gray);
+    setFormat(begin, end - begin, Qt::gray);
+
+    QRegularExpression clt("(<CLT ([0-9][0-9])>)(((?!<CLT>).)*)(<CLT>)");
+    QTextCharFormat cltTagFormat;
+    cltTagFormat.setFontItalic(true);
+    cltTagFormat.setForeground(Qt::gray);
+    QTextCharFormat cltTagNumberFormat = cltTagFormat;
+    //cltTagNumberFormat.setForeground(Qt::red);
+
+    auto i = clt.globalMatch(text, begin);
+    while (i.hasNext())
+    {
+        auto match = i.next();
+        if (match.capturedEnd() > end) break;
+        QColor textColor = Qt::blue;
+
+        setFormat(match.capturedStart(1), match.capturedLength(1), cltTagFormat);
+        setFormat(match.capturedStart(2), match.capturedLength(2), cltTagNumberFormat);
+        setFormat(match.capturedStart(3), match.capturedLength(3), textColor);
+        setFormat(match.capturedStart(5), match.capturedLength(5), cltTagFormat);
+    }
 }
