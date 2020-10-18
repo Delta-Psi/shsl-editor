@@ -24,5 +24,6 @@ target_include_directories(shsl-editor PRIVATE "${PROJECT_SOURCE_DIR}/qhexedit2/
 
 target_link_libraries(shsl-editor tga)
 
-target_link_libraries(shsl-editor shsl-library)
+target_link_libraries(shsl-editor shsl-library-bindings)
+target_include_directories(shsl-editor PRIVATE "${PROJECT_SOURCE_DIR}/library/bindings/src")
 target_include_directories(shsl-editor PRIVATE "${PROJECT_BINARY_DIR}/library")

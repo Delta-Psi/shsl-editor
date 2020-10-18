@@ -1,4 +1,4 @@
-use crate::script::Script;
+use shsl_library::script::Script;
 use libc::{size_t, c_char};
 
 #[repr(C)]

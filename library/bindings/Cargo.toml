@@ -1,0 +1,15 @@
+[package]
+name = "shsl-library-bindings"
+version = "0.1.0"
+authors = ["Delta-Psi <delta.psi00@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+shsl-library = { path = ".." }
+libc = "0.2.79"
+
+[build-dependencies]
+cbindgen = "0.15.0"
+
+[lib]
+crate-type = ["staticlib"]

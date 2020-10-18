@@ -266,8 +266,15 @@ name = "shsl-library"
 version = "0.1.0"
 dependencies = [
  "byteorder",
+]
+
+[[package]]
+name = "shsl-library-bindings"
+version = "0.1.0"
+dependencies = [
  "cbindgen",
  "libc",
+ "shsl-library",
 ]
 
 [[package]]
