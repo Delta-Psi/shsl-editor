@@ -54,7 +54,7 @@ void ScriptSyntaxHighlighter::highlightBlock(const QString &text)
 void ScriptSyntaxHighlighter::highlightDefault(const QString &text, int begin, int end)
 {
     QRegularExpression opcode("^([a-zA-Z_][a-zA-Z_0-9]*)($|[ \t])");
-    QRegularExpression number("(^|[ \t,])(0x[0-9a-fA-F]+)|(0b[01]+)|([1-9][0-9]*)($|[ \t,])");
+    QRegularExpression number("(^|[ \t,])(0x[0-9a-fA-F]+)|(0b[01]+)|([1-9][0-9]*)|0($|[ \t,])");
 
     // match opcodes
     auto i = opcode.globalMatch(text, begin);
@@ -79,7 +79,7 @@ void ScriptSyntaxHighlighter::highlightString(const QString &text, int begin, in
 {
     setFormat(begin, end - begin, Qt::gray);
 
-    QRegularExpression clt("(<CLT ([0-9][0-9])>)(((?!<CLT>).)*)(<CLT>)");
+    /*QRegularExpression clt("(<CLT ([0-9][0-9])>)(((?!<CLT>).)*)(<CLT>)");
     QTextCharFormat cltTagFormat;
     cltTagFormat.setFontItalic(true);
     cltTagFormat.setForeground(Qt::gray);
@@ -97,5 +97,5 @@ void ScriptSyntaxHighlighter::highlightString(const QString &text, int begin, in
         setFormat(match.capturedStart(2), match.capturedLength(2), cltTagNumberFormat);
         setFormat(match.capturedStart(3), match.capturedLength(3), textColor);
         setFormat(match.capturedStart(5), match.capturedLength(5), cltTagFormat);
-    }
+    }*/
 }

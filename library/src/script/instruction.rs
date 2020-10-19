@@ -1,4 +1,4 @@
-use byteorder::{ByteOrder, BE};
+use byteorder::{ByteOrder, LE, BE};
 
 // from 0xa72980
 const ARGUMENT_LENGTHS: &[u8] = &[
@@ -16,6 +16,7 @@ const ARGUMENT_LENGTHS: &[u8] = &[
 
 #[derive(Debug)]
 pub enum Instruction {
+    TextCount(u16),
     Text(u16),
 
     Stop,
@@ -33,6 +34,7 @@ impl Instruction {
         }
 
         Some(match data.get(1)? {
+            0x00 => (TextCount(LE::read_u16(data.get(2..)?)), 4), 
             0x02 => (Text(BE::read_u16(data.get(2..)?)), 4), 
 
             0x1a => (Stop, 2),
@@ -64,6 +66,7 @@ impl Instruction {
         use std::fmt::Write;
 
         match self {
+            TextCount(count) => format!("text_count {}", count),
             Text(index) => {
                 let string = &script.strings[*index as usize];
 
