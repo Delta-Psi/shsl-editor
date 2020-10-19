@@ -18,6 +18,9 @@ const ARGUMENT_LENGTHS: &[u8] = &[
 pub enum Instruction {
     Text(u16),
 
+    Stop,
+    Return,
+
     Raw(Vec<u8>),
 }
 
@@ -31,6 +34,9 @@ impl Instruction {
 
         Some(match data.get(1)? {
             0x02 => (Text(BE::read_u16(data.get(2..)?)), 4), 
+
+            0x1a => (Stop, 2),
+            0x1c => (Return, 2),
 
             op @ 0x4e ..= 0xff => {
                 eprintln!("warning: invalid opcode 0x{:x}", op);
@@ -64,6 +70,9 @@ impl Instruction {
                 format!("text `\n{}`", string)
             }
 
+            Stop => "stop".to_string(),
+            Return => "return".to_string(),
+
             Raw(data) => {
                 let mut result = String::with_capacity(8 + 6*(data.len()-1));
 
@@ -75,5 +84,22 @@ impl Instruction {
                 result
             }
         }
+    }
+}
+
+#[derive(Debug)]
+pub struct Instructions<'a>(&'a [u8]);
+
+impl<'a> Instructions<'a> {
+    pub fn decode(data: &'a [u8]) -> Self {
+        Self(data)
+    }
+}
+
+impl<'a> Iterator for Instructions<'a> {
+    type Item = Instruction;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        Instruction::read_and_advance(&mut self.0)
     }
 }
